@@ -1,0 +1,780 @@
+<document xmlns="http://cnx.rice.edu/cnxml" xmlns:m="http://www.w3.org/1998/Math/MathML" xmlns:md="http://cnx.rice.edu/mdml" xmlns:bib="http://bibtexml.sf.net/">
+  <title>Protein Inverse Kinematics and the Loop Closure Problem</title>
+  <metadata><md:content-id>undefined</md:content-id><md:title/><md:uuid>0430c7fe-b3d2-4588-8ab8-9b8b4353190a</md:uuid>
+</metadata>
+
+  <content>
+ 
+<section id="topics_section">
+   <para id="topics_para">
+
+ <list id="topicsList">
+  <item> <link target-id="BackgroundMaterial"> Background Material </link> </item>
+  <item> <link target-id="InverseKinematicsRelevanceToProteins"> Inverse Kinematics and its Relevance to Proteins</link> </item>
+  <item> <link target-id="InverseKinematicsExplained"> Solving Inverse Kinematics</link>
+  <list id="topicsInverseKinematics">
+   <item> <link target-id="RelatedWork"> Inverse Kinematics Methods </link> 
+   <list id="topicsInvKinematicsMethods">
+    <item> <link target-id="ClassicIKSolvers"> Classical Methods </link> </item>
+    <item> <link target-id="OptimizedIKSolvers"> Optimization-Based Methods </link> </item>
+   </list>
+   </item>
+   <item> <link target-id="CCDSection"> Cyclic Coordinate Descent and Its Application to Proteins </link> </item>
+  </list></item>
+ </list>
+
+   </para>
+   </section>
+
+   <section id="BackgroundMaterial"> <title> Background Material
+   </title> <para id="BackgroundIntro">The math involved in solving the
+   Inverse Kinematics problem requires some background in linear
+   algebra, specifically in the anatomy and application of
+   transformation matrices. Please refer to <link document="m11621" target-id="ManipulationIntro"> Forward Kinematics </link> for an
+   introduction to transformation matrices. It is very important that
+   you understand how to apply transformations for the Forward
+   Kinematics of a chain.  </para> </section>
+
+<section id="InverseKinematicsRelevanceToProteins">
+<title> Inverse Kinematics and its Relevance to Proteins</title>
+ 
+ <para id="element-50"><term>Inverse kinematics</term> (IK) is the
+  problem of finding the right values for the underlying degrees of
+  freedom of a chain, in the case of a protein polypeptide chain, of
+  the dihedral angles, so that the chain satisfies certain spatial
+  constraints.  For example, in some applications, it is necessary to
+  find rotations that can steer certain atoms to desired locations in
+  space. To achieve a particular function, protein regions sometimes
+  have to undergo concerted motion where atoms move together in order
+  to locate themselves near another protein or molecule. The motion of
+  atoms is spatially constrained because they have to assume specific
+  target locations in space. However, since atoms must move together
+  in order not to break bonds by their motion, it is easier to model
+  their motion in <term>dihedral angle space</term>, where bond
+  lengths and bond angles are fixed.  This parameterization of protein
+  motion, called the <term>idealized</term> or <term>rigid geometry
+  model</term>, is discussed in <link document="m11621">Representing
+  Proteins in silico: Data Structures and
+  Kinematics</link>.</para>
+
+  <para id="IKrelevance">Solving the Inverse Kinematics problem in the context of
+  proteins, i.e., finding what values of the dihedral angles of a
+  protein polypeptide chain yield configurations of the chain where
+  the endpoints satisfy spatial constraints, is a very important
+  problem in structural biology. The relevance of Inverse Kinematics
+  for proteins can be seen in three main applications: 
+  <list id="IKApplications">
+  <item> Finding a missing loop (Loop Closure Problem) </item>
+  <item> Characterizing the Flexibility of a fragment of the protein
+  polypeptide chain</item>
+  <item> Generating ensembles of protein structures </item>
+  </list>
+
+  It is worth noting that many globular proteins have a relatively
+  stable, inflexible core region consisting of tightly arranged
+  secondary structure elements. However, proteins are less compact and
+  more flexible at the surface, where unstructured fragments of the
+  protein polypeptide chain, mobile loops, may swing freely. One
+  consequence of loop mobility is that experimental structure
+  determination methods may have difficulty resolving the atomic
+  positions of surface loops. The positions of the atoms in mobile
+  loops may be so inconsistent that no single position relative to the
+  core dominates. In such cases, experimental structure determination
+  methods cannot determined the positions of the atoms of a mobile
+  loop. </para>
+
+  <para id="IKrelevance2">When this happens, the result is a partially
+  resolved protein structure, with fragments of the protein chain,
+  such as mobile loops, missing. The only information available for
+  the missing fragment is its amino acid sequence and where its two
+  endpoints need to be spatially located in order to connect with the
+  known, resolved, part of the protein structure. Given the spatial
+  constraints on the endpoints of the missing fragment, one needs to
+  find values to the dihedral angles of the fragment in order to
+  obtain configurations of the fragment consistent with the
+  constraints. This problem is known as the Loop Closure problem in
+  the structural biology community. It is easy to note that even
+  though this problem is cast in the context of finding atomic
+  positions of a missing fragment such as a mobile loop, it is nothing
+  new but a statement of the Inverse Kinematics problem for proteins.
+  </para>
+
+  <para id="IKrelevance3"> Solving the Inverse Kinematics problem in
+  the context of a missing fragment in proteins is not limited to
+  finding mobile loops. More generally, through the Inverse Kinematics
+  problem, one can search for alternative configurations of any
+  fragment of a protein polypeptide chain (even fragments containing
+  secondary structural elements) that satisfy the spatial constraints
+  on their endpoints. Very recently, a third application has emerged,
+  where alternative configurations of consecutive fragments that cover
+  a polypeptide chain are generated to obtain an ensemble of
+  alternative protein structures.  </para>
+
+  </section>
+
+  <section id="InverseKinematicsExplained">
+  <title> Solving Inverse Kinematics </title>
+  <para id="IKIntro">
+  In applying inverse kinematics algorithms to proteins, we are taking
+  advantage of a striking similarity between organic molecules and
+  robotic manipulators (robot arms) in terms of how they move.  As
+  robot manipulators have joints, proteins have atoms. As robot
+  manipulators have links that connect their joints, proteins have
+  bonds that connect their atoms. The similarity between proteins and
+  robots makes it possible for us to apply to proteins a large
+  existing literature of solutions to the Inverse Kinematics problem,
+  developed in the context of robot <term>manipulators</term> (robotic
+  arms).</para><para id="Introduction">Before we proceed with some
+  simple inverse kinematics examples, note that inverse kinematics is
+  the inverse of the forward kinematics problem. Therefore, an
+  immediate attempt to solve the inverse kinematics problem would be
+  by inverting forward kinematics equations.  
+  </para>
+ 
+  <para id="SimpleExample">Let's illustrate how to solve the inverse
+  kinematics problem for robot manipulators on a simple example. The
+  figure below shows a simple planar robot with two arms. The
+  underlying degrees of freedom of this robot are the two angles
+  dictating the rotation of the arms. These are labeled in the
+  figure below as θ1 and θ2. The inverse kinematics question in this case would    
+  be:
+  What are the values for the degrees of freedom so that the end
+  effector of this robot (the tip of the last arm) lies at position
+  (x,y) in the two-dimensional Cartesian space? One straightforward approach to solving the problem is to try to write down the
+  forward kinematics equations that relate (x,y) to the two rotational
+  degrees of freedom (see <link document="m11621" target-id="ManipulationIntro"> Forward Kinematics </link> for details on how to do so), then try to solve these equations. The solutions
+  will give you an answer to the inverse kinematics problem for this
+  robot.
+
+   <figure orient="horizontal" id="simple_example">
+   <subfigure id="situation_depiction">
+   <title>Simple Example </title>
+   <media id="idp3916416" alt=""><image src="../../media/IK_example1.png" mime-type="image/png" height="174"/></media>
+   <caption> Steer end-effector to (x, y) target position.
+   </caption>
+   </subfigure>
+   <subfigure id="situation_solutions">
+   <title> Non-unique Solutions </title>
+   <media id="idm158912" alt=""><image src="../../media/IK_example2.png" mime-type="image/png" height="174"/></media>
+   <caption> Two solutions depicted for this IK problem.
+   </caption>
+   </subfigure>
+   <caption> Illustration of solving the Inverse Kinematics problem for a simple  planar robot with two arms. Figure is adapted from <link url="http://www.mathworks.com/products/fuzzylogic/demos.html?file=/products/demos/shipping/fuzzy/invkine_codepad.html#1"> MathWorks</link>.
+   </caption>
+   </figure>
+
+   <exercise id="simpleIKExample">
+  <problem id="idm2359632">
+    <para id="SimpleExampleP1">Given an (x, y) target position for the end-effector of a robot with only two degrees of freedom θ1 and θ2, what are the solutions for θ1 and θ2?</para>
+  </problem>
+  <solution id="idm1613040">
+    <para id="sol1p1">
+      You can compare your answer with the derivation steps below.
+      <figure id="simple_example_solved">
+      <title> Simple Example Solved </title>
+      <media id="idm10714096" alt=""><image src="../../media/IK_example1_sol.png" mime-type="image/png"/></media>
+      <caption> Finding solutions to θ1 and θ2 from the forward kinematics equations of the 2-arm planar robot.
+      </caption>
+      </figure>   
+      You can see that there can be 0, 1, or 2 solutions for this example. 
+      Where does the non-uniqueness of the solutions lie in the answers we 
+      derive? 
+    </para>
+  </solution>
+</exercise>
+
+  As it can be seen in the example above, the solutions to an inverse kinematics problem are not necessarily unique.
+  In fact, as the number of degrees of freedom increases, so does the maximum number of 
+  solutions, as depicted in the figure.
+It is also possible for a problem to have no solution if the point on the robot cannot be brought to the target point in space at all.</para>
+
+  <para id="MoreonIK1">While the above example offers equations that are easy to solve, general inverse kinematics problems 
+  require solving systems of nonlinear equations for which there are no general 
+  algorithms.  Some inverse kinematics problems cannot be solved analytically. In robotics, it is sometimes possible to design systems to have solvable inverse kinematics, but in the general case, we must rely on approximation methods in order to keep the problem tractable, or, in some cases, even solvable.  For examples on how to address inverse kinematics in particular robotic systems, please read chapter 4 of <cite target-id="craig"/>. An illustration of the solutions of the inverse kinematics problem for a robot which is widely used in industry is shown below.
+
+   <figure id="complicated_example"><title> More Realistic Example </title>
+   <media id="idm9701632" alt=""><image src="../../media/IK_multi_sols.png" mime-type="image/png" height="174"/></media>
+   <caption> The spatial constraint on the end-effector of this three-dimensional manipulator can be satisfied by a maximum of four different configurations of the manipulator. Figure is obtained from <link url="http://www.roble.info/robotics/serial/html/SerialRobots-1se8.html"> Serial Robots </link>.
+</caption>
+   </figure>
+  </para>
+
+  
+
+  <section id="RelatedWork">
+  <title> Inverse Kinematics Methods </title>
+  <para id="IKSolversIntro">Inverse kinematics methods are categorized into two main groups: 
+
+<list id="IKmethodTypes">
+<item>exact, 
+  classic, or algebraic methods</item>
+<item> heuristic, or optimization methods</item></list> 
+
+While 
+  exact methods are <term>complete</term>, i.e. they report all 
+  solutions, they can only find solutions for chains with up to nine degrees of 
+  freedom. Hierarchical approaches break long chains into smaller ones for 
+  which exact methods provide answers. More powerful methods, referred to as 
+  optimization or heuristic methods, though not complete, are unrestricted in the number of degrees of freedom in the systems about which they reason.
+  </para>
+
+  <section id="ClassicIKSolvers">
+  <title>Classic Inverse Kinematics Methods</title>
+  <para id="ClassicIKPara1">It is known that for manipulators with no more than six degrees of freedom, there is
+   a finite number of solutions to the inverse kinematics problem <cite target-id="craig"/>. There
+   is, however, no analytical method that can find these solutions for
+   all types of manipulators. For manipulators with only revolute joints,
+   which is the case for biomolecules with idealized geometry, the
+   number of unique solutions is at most 16, when the number of degrees of freedom
+   does not exceed six <cite target-id="RaghavanRoth89"/>. 
+   An efficient solution was proposed in <cite target-id="ManochaCanny94"/>
+   and later applied to the conformational analysis of small molecular 
+   chains <cite target-id="ManochaZhu94"/>, <cite target-id="Manocha95"/>.
+   Methods based on curve approximation were proposed
+   in <cite target-id="Chirikjian93"/> for the inverse kinematics of hyper-redundant robots, 
+   where the number of regularly distributed joints is very large.
+  </para>
+  <para id="ClassicIKPara2">Specialized solutions to inverse kinematics in biochemistry appeared as
+   early as 1970 <cite target-id="GoScheraga70"/>, where fragments of up to 6
+   degrees of freedom were predicted by solving a set of polynomial
+   equations representing geometric transformations. These equations were
+   applied to building tripeptide loops <cite target-id="GoScheraga70"/>
+   under the ideal geometry assumption. Later work <cite target-id="BruccoleriKarplus85"/>, 
+   <cite target-id="PalmerScheraga91"/>, <cite target-id="Manocha95"/>, 
+   <cite target-id="WedemeyerScheraga99"/> offered efficient analytical solutions for three   
+   consecutive residues through spherical geometry and polynomial equations. Bounding
+   inverse kinematic solutions for chains with no more than six degrees of freedom
+   within small intervals has also been shown relevant in the context of drug
+   design <cite target-id="ZhangKavraki02"/>. A new formulation that extends the
+   domain of solutions to any three residues, not necessarily consecutive,
+   and with arbitrary geometry, was recently proposed <cite target-id="Coutsias04"/>.
+   Current work that pushes the dimensionality limit from six to nine degrees of freedom makes use of an efficient
+   subdivision of the solution space <cite target-id="ZhangKavraki04"/>.
+  </para>
+  </section>
+
+  <section id="OptimizedIKSolvers">
+  <title>Inverse Kinematics Methods with Optimization</title>
+  <para id="OptimizedIKPara1">Currently, optimization-based solutions are considered most appropriate
+   for accommodating chains with arbitrary numbers of degrees of freedom. Two 
+   well-known optimization-based inverse kinematics solutions that
+   iteratively solve a system of equations until loops are closed are
+   <term>Random Tweak </term><cite target-id="Fine86"/>,  
+   <cite target-id="Shenkin87"/> and <term>Cyclic Coordinate Descent (CCD)</term>
+   <cite target-id="luenberger"/>,  <cite target-id="WangChen91"/>, 
+   <cite target-id="CanutescuDunbrack03"/>. 
+   Both methods are based on iteratively setting the dihedral degrees of freedom of a fragment or kinematic chain 
+   until the end effector (atom for a protein) reaches a target position.
+   </para>
+   <para id="OptimizedIKPara2">Random tweak relies on the computation of the Jacobian (a high-dimensional analog of the derivative of a function on real numbers), a process that is 
+   computationally expensive and numerically
+   unstable. In addition to not being free
+   from mathematical singularities, random tweak does not allow additional constraints
+   on individual residues because modifications to dihedral angles are
+   introduced all at once, with a strong dependence of each dihedral
+   proposed change on all the others. Additional constraints on the
+   dihedrals may result in the unpredictable motion of a feature atom
+   away from rather than toward its target position.
+  </para>
+  <para id="OptimizedIKPara3">Avoiding the use of the Jacobian, CCD is computationally inexpensive,
+   numerically stable, and free from singularities. CCD
+   avoids the interdependence of dihedral angles by adjusting only a single degree of freedom
+   at a time. This allows for additional constraints on dihedral angles with
+   a predictable motion of the end effector towards the target
+   position. First introduced in the context of non-linear
+   programming <cite target-id="luenberger"/> , CCD was found applications in
+   the robotics <cite target-id="WangChen91"/> community, and later in the structural biology community in the context of the loop closure
+   problem for proteins<cite target-id="CanutescuDunbrack03"/>.
+  </para>
+  </section>
+  </section>
+
+  <section id="CCDSection"> 
+  <title> Cyclic Coordinate Descent and Its Application to Proteins
+  </title> 
+
+  <para id="element-529">CCD tries to find an optimal angle by which to
+  rotate a single bond so as to steer a desired atom towards its
+  target position. When applying CCD to find dihedral angles of a
+  fragment of the polypeptide chain so that the ends of the fragment
+  connect properly with the rest of the chain, it is important to
+  steer not just one atom of the end of the fragment, but the three
+  backbone atoms of the end simultaneously. Finding values to the
+  dihedral angles that steer the three backbone atoms of the end of
+  the fragment simultaneously to their target positions guarantees
+  that the end of the fragment will assume both its target position
+  and orientation in space. We will explain how to find optimal values
+  to the dihedral angles of a fragment by which to simultaneously
+  steer the three backbone atoms of the end of the fragment to their
+  target positions. We first define their current positions M and
+  their target positions F, as shown in the figure below. The goal is
+  to minimize the Euclidean distance between the current and the
+  target positions for all three atoms simultaneously. </para><para id="CCD_intro">In order to find the optimal angle by which to rotate a particular bond, we can define an objective function S that we wish to minimize. We propose a value for S that sums the square of the deviations between the final position of the atoms after the rotation (M) and the desired positions (F). Using this nomenclature, the squared norm of the vector M-F (denoted FM) has precisely this value for each of the three atoms, so we can sum the three contributions to S. The FM vectors can be defined relative to an origin O located along the axis of rotation, which will simplify the math, since the rotation is two-dimensional when working on the plane perpendicular to the axis of rotation. O can be computed by projecting the current position of the atom, M, onto the rotation axis. It is convenient to decompose OM for each feature atom into two components (along the r and s local axes), in order to allow its expression in terms of the angle being rotated (using cosine and sine). This way, the distance between the atoms and their target positions will be only a function of the fixed (rotatable bond) atoms and the angle to rotate, which remains the only variable and the problem can be solved.
+
+   <figure orient="horizontal" id="CCD_Explanation"><subfigure id="ccd_schematics">
+   <title> CCD Schematics </title>
+   <media id="idm2594784" alt=""><image src="../../media/c_d_ccd_schematic.jpg" mime-type="image/jpeg"/></media>
+   <caption> Find optimal dihedral rotation for the current bond so that all 
+             three desired atoms reach their target positions.
+   </caption>
+   </subfigure>
+   <subfigure id="ccd_setup">
+   <title> Finding Optimal Angle </title>
+   <media id="idm2495168" alt=""><image src="../../media/c_d_equations_setup.png" mime-type="image/png"/></media>
+   <caption> Since S is defined as the sum of squared distances between current 
+             positions and target positions, steering these three atoms to 
+             their target positions requires minimizing S. Therefore, the 
+             optimal dihedral rotation can be found by minimizing S.
+   </caption>
+   </subfigure>
+   <caption> Schematics of Cyclic Coordinate Descent </caption>
+   </figure>
+ 
+The question then becomes that of finding a rotation along the
+rotation axis O, shown in the figure, that minimizes S. First, we need
+to define S as a function of the angle we are trying to find. Doing so
+is not hard, since rotation by this angle is a two-dimensional
+rotation. In the figure above we have shown how the position of an
+atom can be updated through a two-dimensional rotation by the angle
+around the rotation axis. In this way we obtain an expression that
+relates S to the angle we want to find. Since this angle has to
+minimize S, it has to provide a solution to the first order derivative
+of S set to 0. This is shown below in Figure 5. Simplifying the
+expression for the first order derivative of S set to 0 gives us a
+formula for <code display="inline"> tan(<m:math><m:ci>α</m:ci></m:math>)
+</code>. CCD is a very efficient method due to the fact that it
+obtains the value for α analytically. However, an expression for the
+tangent does not provide a unique value for the angle. This is a
+consequence of the fact that the derivative of S set to 0 corresponds
+not only to minima, but also to local maxima. In order to find the
+angle that indeed minimizes S, one would have to make sure that the
+second order derivative of S is greater than 0. This is more
+cumbersome. There is a way to avoid doing such calculations by
+realizing that the formula we received for S in terms of the angle we
+want to solve for, can be rewritten as shown in Figure 5. In this way,
+one can obtain a value for both the cosine and the sine of the angle,
+which now uniquely determines the optimal angle.
+
+   <figure orient="horizontal" id="CCD_Minimization"><subfigure id="ccd_solution">
+   <title> CCD Solution </title>
+   <media id="idp3260928" alt=""><image src="../../media/c_d_equations_solutions.png" mime-type="image/png"/></media>
+   <caption> Posing a minimization procedure reveals the value for the 
+             optimal angle.
+   </caption>
+   </subfigure>
+   <subfigure id="ccd_better_solution">
+   <title> Better Solution </title>
+   <media id="idm360432" alt=""><image src="../../media/c_d_equations_better_solution.png" mime-type="image/png"/></media>
+   <caption> The correct quadrant can be determined by rewriting S.
+   </caption>
+   </subfigure>
+   <caption> Solution to the minimization of S </caption>
+   </figure>
+
+ </para>
+  
+ <para id="CCDAdvantages">Unlike classic inverse-kinematics solutions
+ that use Jacobian matrices <cite target-id="Fine86"/>, <cite target-id="Shenkin87"/>, or general numerical approaches, CCD is free of
+ singularities and does not depend on initial guesses for
+ solutions. Compared to inverse kinematics techniques with
+ optimization that suffer from high computational times, CCD is
+ computationally fast. Unlike other methods such as random tweak, CCD
+ gives predictable behavior and suffers from no anomalies when
+ additional constraints are added to the dihedrals (e.g. constraints
+ imposed by the physical-chemical forces on the protein). Such
+ properties make CCD very appealing.  
+ </para>
+
+  <para id="CCDDetails">Because CCD solves for the degrees of freedom
+ of a chain one at a time, the method finds the optimal values for all
+ the degrees of freedom of the chain iteratively, according to some
+ order. CCD iterates over the degrees of freedom according to a
+ predetermined order (e.g. a straightforward implementation of the
+ method may use the identity order, where degrees of freedom are
+ numbered consecutively in increasing order from the base to the end
+ effector of the chain), solving for each one of them at a time. This
+ process of iterating over all the degrees of freedom can be repeated
+ a maximum number of times or until the end effector lies within an
+ epsilon distance of its position and orientation in space. 
+ </para>
+
+ <para id="CCDApplication1"> While not able to enumerate all the
+ solutions to the degrees of freedom, CCD guarantees it will find a
+ solution if one exists. Given a configuration of the chain and a
+ target position and orientation for the chain's end effector, CCD
+ iteratively modifies the degrees of freedom of the chain until either
+ it runs out of iterations or it manages to satisfy the spatial
+ constraint on the end effector. Due to its computational efficiency
+ (linear time complexity on the number of degrees of freedom of the
+ chain), CCD has been applied to determine atomic positions of missing
+ mobile loops of arbitrary length<cite target-id="CanutescuDunbrack03"/>. A
+ similar application complete missing loops in partially resolved
+ crystallographic structures can be found in <cite target-id="LotanThesis04"/>, <cite target-id="LotanWafr04"/>, <cite target-id="LotanActa05"/>. </para>
+
+ <para id="CCDApplication2"> A recent application of CCD to not just
+ loops but any fragment of a protein polypeptide chain can be found
+ in<cite target-id="ShehuClementiKavraki06"/>. The work in <cite target-id="ShehuClementiKavraki06"/> applies CCD to configurations of a
+ fragment that are sampled uniformly at random to obtain an ensemble
+ of fragment configurations that connects with the rest of the protein
+ polypeptide chain. Careful attention is paid to the energetic
+ refinement of the obtained fragment configurations in order to ensure
+ the biological relevance of the configurations at room
+ temperature. The usage of CCD in <cite target-id="ShehuClementiKavraki06"/> to obtain an ensemble of biologically
+ meaningful configurations of a fragment of the polypeptide chain is
+ an interesting application to capture the flexibility of a fragment
+ in the context of a given protein structure. By generating ensembles
+ of biologically relevant configurations for fragments that are
+ defined consecutively and with significant overlap over the protein
+ polypeptide chain, the work in <cite target-id="ShehuClementiKavraki06"/>
+ offers a novel approach to capture the flexibility of the entire
+ polypeptide chain.
+ </para>
+
+
+ </section> 
+
+ <section id="PDFS">
+ <para id="RequiredReading"><title> Recommended Reading </title>
+ 
+ <list id="PDFs"><item>Canutescu, A.A. and R.L. Dunbrack. <link url="http://www.proteinscience.org/cgi/reprint/12/5/963"> [PDF] </link>.  Cyclic Coordinate Descent: A Robotics Algorithm for Protein Loop Closure.  Protein Science, 12:963-72, 2003.</item>
+
+ <item> Craig, J.J.  Introduction to Robotics, chapter 4.  Reading, MA: Addison-Wesley, 1989.
+ </item>
+
+ <item>van den Bedem, H. and Lotan, I. and Deacon, A. M. and Latombe,
+ J.-C.. <link url="http://www-cs-students.stanford.edu/~itayl/wafr.pdf"> [PDF]
+ </link>. Computing protein structures from electron density maps: the
+ missing loop problem. Algorithmic Foundations of Robotics VI, 345-360,
+ 2005.</item>
+
+ <item> Shehu, A. and Clementi, C. and Kavraki, L.E. <link url="http://www3.interscience.wiley.com/cgi-bin/fulltext/112752527/PDFSTART"> [PDF] </link>. Modeling Protein Conformational Ensembles: From Missing Loops to Equilibrium Fluctuations. Proteins: Structure, Function, Bioinformatics, 65(1):164-179, 2006.</item>
+
+ <item>Coutsias, E. A. and Seok, C. and Wester, M. J. and Dill, K. A. <link url="http://www3.interscience.wiley.com/cgi-bin/abstract/111083741/ABSTRACT?CRETRY=1&amp;SRETRY=0">[LINK]</link>.  Resultants and loop closure. International Journal of Quantum Chemistry, 106(1):176-189,2005.</item></list>
+ </para>
+ </section>
+
+ </section>
+
+  </content>
+             <bib:file>
+
+	      <bib:entry id="craig">
+		<bib:book>
+		  <bib:author> Craig, J. J. </bib:author>
+		  <bib:title> Introduction to Robotics </bib:title>
+		  <bib:publisher> Addison-Wesley</bib:publisher>
+		  <bib:year>1989</bib:year>
+		  <bib:address>Reading, MA</bib:address>
+		</bib:book>
+	      </bib:entry>
+  
+              <bib:entry id="ZhangKavraki">
+		<bib:article>
+		  <bib:author> M. Zhang, and L. E. Kavraki </bib:author>
+		  <bib:title> A New Method for Fast and Accurate Derivation of Molecular Conformations 
+                  </bib:title>
+		  <bib:journal> Journal of Chemical Information and Computer Sciences </bib:journal>
+		  <bib:year>2002</bib:year>
+                  <bib:volume> 42 </bib:volume>
+		  <bib:pages> 64-70 </bib:pages>
+                  <bib:note> http://pubs.acs.org/cgi-bin/article.cgi/jcisd8/2002/42/i01/pdf/ci010327z.pdf
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+      <bib:entry id="luenberger">
+		<bib:book>
+		  <bib:author> Luenberger, D. G. </bib:author>
+		  <bib:title> Linear and Nonlinear Programming </bib:title>
+		  <bib:publisher> Addison-Wesley</bib:publisher>
+		  <bib:year>1984</bib:year>
+		</bib:book>
+	      </bib:entry>
+
+              <bib:entry id="WangChen91">
+		<bib:article>
+		  <bib:author> L. T. Wang, and C. C. Chen </bib:author>
+		  <bib:title> A combined optimization method for solving the inverse kinematics problem of 
+                                  mechanical manipulators
+                  </bib:title>
+		  <bib:journal> IEEE Transactions on Robotics and Automation </bib:journal>
+		  <bib:year>1991</bib:year>
+                  <bib:volume> 7 </bib:volume>
+		  <bib:pages> 489-499 </bib:pages>
+                  <bib:note> http://ieeexplore.ieee.org/search/advsearch.jsp
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+              <bib:entry id="CanutescuDunbrack03">
+		<bib:article>
+		  <bib:author> A. A. Canutescu, and R. L. Dunbrack </bib:author>
+		  <bib:title> Cyclic Coordinate Descent: A Robotics Algorithm for Protein Loop Closure
+                  </bib:title>
+		  <bib:journal> Protein Science </bib:journal>
+		  <bib:year>2003</bib:year>
+                  <bib:volume> 12 </bib:volume>
+		  <bib:pages> 963-972 </bib:pages>
+                  <bib:note> http://www.proteinscience.org/cgi/reprint/12/5/963
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+              <bib:entry id="RaghavanRoth89">
+		<bib:article>
+		  <bib:author> M. Raghavan, and B. Roth </bib:author>
+		  <bib:title> Kinematic analysis of the 6R manipulator of general geometry
+                  </bib:title>
+		  <bib:journal> International Symposium on Robotics Research </bib:journal>
+		  <bib:year>1989</bib:year>
+                  <bib:note> http://ieeexplore.ieee.org/search/advsearch.jsp
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+             <bib:entry id="Chirikjian93">
+		<bib:article>
+		  <bib:author> G. S. Chirikjian </bib:author>
+		  <bib:title> General methods for computing hyper-redundant manipulator inverse 
+                                   kinematics
+                  </bib:title>
+		  <bib:journal> IEEE/RSJ International Conference on Intelligent Robots and Systems 
+                  </bib:journal> 
+		  <bib:year>1993</bib:year>
+                  <bib:note> http://caesar.me.jhu.edu/publication/hyperR_manipulators.html
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+              <bib:entry id="ManochaCanny94">
+		<bib:article>
+		  <bib:author> D. Manocha, and J. Canny </bib:author>
+		  <bib:title> Efficient inverse kinematics for general 6R manipulator
+                  </bib:title>
+		  <bib:journal> IEEE Transactions on Robotics and Automation </bib:journal>
+		  <bib:year>1994</bib:year>
+                  <bib:volume> 10 </bib:volume>
+		  <bib:pages> 648-657 </bib:pages>
+                  <bib:note> ftp://ftp.cs.unc.edu/pub/users/manocha/PAPERS/MOLECULE/report.pdf
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+              <bib:entry id="ManochaZhu94">
+		<bib:article>
+		  <bib:author> D. Manocha, and Y. Zhu </bib:author>
+		  <bib:title> Kinematic manipulation of molecular chains subject to rigid constraints
+                  </bib:title>
+		  <bib:journal> International Conference on Intelligent Systems for Molecular Biology 
+                  </bib:journal>
+		  <bib:year>1994</bib:year>
+                  <bib:volume> 2 </bib:volume>
+		  <bib:pages> 285-293 </bib:pages>
+                  <bib:note> ftp://ftp.cs.unc.edu/pub/users/manocha/PAPERS/MOLECULE/ismb.pdf
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+              <bib:entry id="Manocha95">
+		<bib:article>
+		  <bib:author> D. Manocha, and Y. Zhu, and W. Wright </bib:author>
+		  <bib:title> Conformational analysis of molecular chains using nano-kinematics
+                  </bib:title>
+		  <bib:journal> Computer Applications in Biosciences </bib:journal>
+		  <bib:year>1995</bib:year>
+                  <bib:volume> 11 </bib:volume>
+		  <bib:pages> 71-86 </bib:pages>
+                  <bib:note> ftp://ftp.cs.unc.edu/pub/users/manocha/PAPERS/MOLECULE/main.pdf
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+              <bib:entry id="ZhangKavraki02">
+		<bib:article>
+		  <bib:author> M. Zhang, and L. E. Kavraki </bib:author>
+		  <bib:title> Solving Molecular Inverse Kinematics Problems for Protein Folding and Drug 
+                                  Design
+                  </bib:title>
+  	          <bib:journal> Currents in Computational Molecular Biology </bib:journal>
+		  <bib:year>2002</bib:year>
+                  <bib:pages> 214–215 </bib:pages>
+                  <bib:note>  http://www.cs.rice.edu/CS/Robotics/papers/zhang2002/solve-molec-inv-kinemat.pdf
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+              <bib:entry id="GoScheraga70">
+		<bib:article>
+		  <bib:author> N. Go, and H. J. Scheraga </bib:author>
+		  <bib:title> Ring closure and local conformational deformations of chain molecules
+                  </bib:title>
+		  <bib:journal> Macromolecules </bib:journal>
+		  <bib:year>1970</bib:year>
+                  <bib:volume> 3 </bib:volume>
+		  <bib:pages> 178-187 </bib:pages>
+                  <bib:note> http://pubs.acs.org/cgi-bin/sample.cgi/mamobx/1970/3/i02/pdf/ma60014a012.pdf
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+              <bib:entry id="PalmerScheraga91">
+		<bib:article>
+		  <bib:author> K. A. Palmer, and H. J. Scheraga </bib:author>
+		  <bib:title> Standard-geometry chains fitted to x-ray derived structures : Validation of the 
+                                  rigid-geometry approximation. i. chain closure through a limited search of loop 
+                                  conformations
+                  </bib:title>
+		  <bib:journal> Journal Computational Chemistry </bib:journal>
+		  <bib:year>1991</bib:year>
+                  <bib:volume> 12 </bib:volume>
+		  <bib:pages> 505-526 </bib:pages>
+                  <bib:note> http://doi.wiley.com/10.1002/jcc.540130307
+                  </bib:note>
+		</bib:article>
+
+	      </bib:entry>
+              <bib:entry id="WedemeyerScheraga99">
+		<bib:article>
+		  <bib:author> W. J. Wedemeyer, and H. J. Scheraga </bib:author>
+		  <bib:title> Exact analytical loop closure in proteins using polynomial equations
+                  </bib:title>
+		  <bib:journal> Journal Computational Chemistry </bib:journal>
+		  <bib:year>1999</bib:year>
+                  <bib:volume> 20 </bib:volume>
+		  <bib:pages> 819-844 </bib:pages>
+                  <bib:note> http://www3.interscience.wiley.com/cgi-bin/fulltext/61004552/PDFSTART
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+              <bib:entry id="BruccoleriKarplus85">
+		<bib:article>
+		  <bib:author> R. E. Bruccoleri, and M. Karplus </bib:author>
+		  <bib:title> Chain closure with bond angle variations
+                  </bib:title>
+		  <bib:journal> Macromolecules </bib:journal>
+		  <bib:year>1985</bib:year>
+                  <bib:volume> 18 </bib:volume>
+		  <bib:pages> 2676-2773 </bib:pages>
+                  <bib:note> http://pubs.acs.org/cgi-bin/sample.cgi/mamobx/1985/18/i12/pdf/ma00154a069.pdf.pdf
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+              <bib:entry id="Coutsias04">
+		<bib:article>
+		  <bib:author> E. Coutsias, and C. Seok, and M. Jacobson, and K. Dill </bib:author>
+		  <bib:title> A Kinematic View of Loop Closure
+                  </bib:title>
+		  <bib:journal> Journal of Computational Chemistry </bib:journal>
+		  <bib:year>2004</bib:year>
+                  <bib:volume> 25 </bib:volume>
+		  <bib:pages> 510-528 </bib:pages>
+                  <bib:note>
+                  http://www3.interscience.wiley.com/cgi-bin/fulltext/107061300/PDFSTART
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+             <bib:entry id="ZhangKavraki04">
+		<bib:article>
+		  <bib:author> M. Zhang, and R. A. White, and L. Wang, and R. Goldman, and L. E. Kavraki, 
+                                      and B. Hasset </bib:author>
+		  <bib:title> Improving Conformational Searches by Geometric Screening
+                  </bib:title>
+		  <bib:journal> Journal of Bioinformatics </bib:journal>
+		  <bib:year> 2004 </bib:year>
+                  <bib:volume> 7 </bib:volume>
+		  <bib:pages> 624-630 </bib:pages>
+                  <bib:note> http://bioinformatics.oupjournals.org/cgi/reprint/21/5/624
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+              <bib:entry id="Fine86">
+		<bib:article>
+		  <bib:author> R. M. Fine, and H. J. Wang, and P. S. Shenkin, and  D. L. 
+                                      Yarmush, and C. Levinthal </bib:author>
+		  <bib:title> Predicting antibody hypervariable loop conformations. II: Minimization and 
+                                  molecular dynamics studies of MCPC603 from many randomly generated loop 
+                                  conformations
+                  </bib:title>
+		  <bib:journal> Proteins </bib:journal>
+		  <bib:year>1986</bib:year>
+                  <bib:volume> 1 </bib:volume>
+		  <bib:pages> 342-362 </bib:pages>
+                  <bib:note>                  http://www3.interscience.wiley.com/cgi-bin/fulltext/107611345/PDFSTART
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+              <bib:entry id="Shenkin87">
+		<bib:article>
+		  <bib:author> P. S. Shenkin, and D. L. Yarmush, and R. M. Fine, and H.  J. Wang, 
+                                      and C. Levinthal </bib:author>
+		  <bib:title> Predicting antibody hypervariable loop conformations. I: Ensembles of random 
+                                  conformations for ring-like structures
+                  </bib:title>
+		  <bib:journal> Biopolymers </bib:journal>
+		  <bib:year>1987</bib:year>
+                  <bib:volume> 26 </bib:volume>
+		  <bib:pages> 2053-2085 </bib:pages>
+                  <bib:note>                                 http://www3.interscience.wiley.com/cgi-bin/fulltext/107588501/PDFSTART
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+             <bib:entry id="LotanActa05">
+		<bib:article>
+		  <bib:author> H. van den Bedem, and I. Lotan, and J.-C. Latombe, and A. Deacon </bib:author>
+		  <bib:title> Real-Space Protein-Model Completion: an Inverse-Kinematics Approach
+                  </bib:title>
+		  <bib:journal> Acta Crystallographica </bib:journal>
+		  <bib:year>2005</bib:year>
+                  <bib:volume> D61 </bib:volume>
+		  <bib:pages> 2-13 </bib:pages>
+                  <bib:note> http://www.blackwell-synergy.com/doi/full/10.1107/S0907444904025697                                
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+           <bib:entry id="LotanThesis04"> 
+           <bib:article>
+           <bib:author> I. Lotan </bib:author>
+           <bib:title> Algorithms exploiting the chain structure of proteins </bib:title>
+           <bib:journal> Ph.D. thesis, Stanford University</bib:journal>
+           <bib:year> 2004 </bib:year>
+           <bib:note> http://www-cs-students.stanford.edu/~itayl/mythesis.pdf </bib:note>
+           </bib:article> 
+           </bib:entry>      
+
+           <bib:entry id="LotanWafr04">
+		<bib:article>
+		  <bib:author> H. van den Bedem, and I. Lotan, and A. Deacon, J.-C. Latombe </bib:author>
+		  <bib:title> Computing protein structures from electron density maps: the missing loop problem
+                  </bib:title>
+		  <bib:journal> Algorithmic Foundations of Robotics VI </bib:journal>
+		  <bib:year>2005</bib:year>
+		  <bib:pages> 345-360 </bib:pages>
+                  <bib:note> http://www-cs-students.stanford.edu/~itayl/wafr.pdf 
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+           <bib:entry id="ShehuClementiKavraki06">
+		<bib:article>
+		  <bib:author> A. Shehu, and C. Clementi, and L. E. Kavraki </bib:author>
+		  <bib:title> Modeling Protein Conformational Ensembles:
+ From Missing Loops to Equilibrium Fluctuations
+                  </bib:title>
+		  <bib:journal> Proteins: Structure, Function, and Bioinformatics </bib:journal>
+                  <bib:year> 2006 </bib:year>
+                  <bib:volume> 65(1) </bib:volume>
+                  <bib:pages> 164-179 </bib:pages>
+                  <bib:note> http://www3.interscience.wiley.com/cgi-bin/fulltext/112752527/PDFSTART </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+	    </bib:file>
+ 
+</document>

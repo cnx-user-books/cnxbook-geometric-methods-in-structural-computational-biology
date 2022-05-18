@@ -1,0 +1,828 @@
+<document xmlns="http://cnx.rice.edu/cnxml" xmlns:m="http://www.w3.org/1998/Math/MathML" xmlns:md="http://cnx.rice.edu/mdml" xmlns:bib="http://bibtexml.sf.net/">
+  <title>Motion Planning for Proteins: Biophysics and Applications</title>
+  <metadata><md:content-id>undefined</md:content-id><md:title/><md:uuid>b22fb9fe-44d9-4cbb-988c-b7660bb7f449</md:uuid>
+</metadata>
+  <content>
+
+  <para id="topicsListParagraph"><list id="topicsList"><title> Topics in this Module </title>
+<item> <link target-id="Biophysics"> Free Energy and Potential Functions </link> <list id="BiophysTopicList">
+   <item><link target-id="FreeEnergy">Free Energy</link></item>
+   <item><link target-id="PotentialFunctions">Potential Functions</link></item>
+   </list></item>
+
+<item><link target-id="Applications">Applications of Protein Motion Planners</link> <list id="ApplicationsTopicList">
+   <item> <link target-id="Kinetics">Kinetics of Protein Folding</link></item>
+   <item> <link target-id="Docking">Protein-Ligand Docking Pathways and Kinetics</link></item>
+   </list></item></list></para>
+
+
+  <para id="element-1">As we suggested in <link document="">Robotic Motion Planning and Protein Motion</link>, the main difference between modeling a macroscopic robot arm and a protein chain is that the protein is subject to forces resulting from differences in free energy between its states.  The protein's <term>conformation space</term> does not consist only of colliding and non-colliding structures, but of structures on a continuum of free energy values.  In this module, we will provide a very brief overview of free energy as it relates to protein structures, and then give some examples of how path planning techniques have been applied to solving problems in structural biology.</para>
+<section id="Biophysics">
+<title>Free Energy and Potential Functions</title>
+<section id="FreeEnergy">
+<title>Free Energy</title>
+<para id="FreeEnergyPara1">In other modules, we have introduced the concept of a <term>native conformation</term> for any given protein, that is, the conformation of the protein that is observed, or expected to be observed, under physiological conditions of temperature, pH, and ion balance.  What distinguishes this structure from other structures is that it has the minimum <term>free energy</term> of all accessible conformations.  There are several different definitions of free energy depending on how the system is defined (for example, whether it is allowed to change in temperature, volume, and/or pressure).  One common definition, applicable when temperature and volume are constant, is the Helmholtz Free Energy:
+
+<figure id="Helmholtz"><media id="idp486000" alt=""><image src="../../media/helmholtz.jpg" mime-type="image/jpeg" height="50"/></media>
+<caption>Helmholtz free energy</caption></figure>
+
+The quantity U is the <term>internal energy</term> of the system, both kinetic and potential, although for our purposes, we will usually think of changes in U as resulting from changes in potential energy.  T is the absolute temperature of the system, and S is the <term>entropy</term> of the system, which is very difficult to predict computationally.  Entropy is a measure of the number of accessible states to a molecule in a given state, and corresponds to a notion of disorder.  In general, the probability of observing a particular state of a system (such as a protein in solution) <emphasis>increases</emphasis> exponentially as the free energy <emphasis>decreases</emphasis>, in accordance with the Boltzmann distribution:
+<figure id="Boltzmann"><media id="idp5801360" alt=""><image src="../../media/boltzmann.jpg" mime-type="image/jpeg" height="80"/></media>
+
+<caption>Boltzmann-like distribution.</caption></figure>
+
+E is a particular free energy, kB is the Boltmann constant, and T is the absolute temperature.</para><para id="element-720">In practice, because entropy is very difficult to approximate computationally, potential energy is often used instead of free energy in molecular simulations and docking procedures.  When the process is driven by potential energy, this is a reasonable approximation.  Some processes are entropically driven, and results are usually poor when trying to model these processes using only potential energy.</para>
+</section>
+
+<section id="PotentialFunctions">
+  <title>Potential Functions</title>
+    <para id="first"><term>Potential functions</term> are functions used to evaluate the feasibility of a particular structure of a molecule.  Ideally, this would be done with quantum mechanics, in which case the energy function could report the true energy of a particular structure.  In practice, quantum mechanical analysis of molecules the size of proteins is wildly intractable.  As a compromise, biophysicists have developed artificial functions based on classical physics to approximate the true energy of molecular systems. Sometimes called <term> potential functions</term> or <term>molecular force fields</term>, these functions generally accept as input a molecular conformation, in the form of Cartesian coordinates for all atoms, and output an energy value.  These energy values are generally only meaningful in relative terms: They provide information on what conformations of the molecule are more or less probable than others. The lower the energy value, then the more likely the conformation is to be observed.  Most molecular potential functions have the form:
+    </para>
+    
+<figure id="energy"><media id="idp2902704" alt=""><image src="../../media/efunction.png" mime-type="image/png"/></media>
+
+<caption> A generic potential function.</caption></figure>
+
+<para id="second">Approximate energy functions provide the basis for molecular simulations and some protein-ligand docking procedures, among other applications. In some docking problems, a potential function is used to evaluate how likely a particular pose of a small molecule (ligand) in the binding pocket of a protein is. The internal energy of the receptor and the ligand are considered along with the interaction energy between the two. Interaction energy usually consists of the non-bonded terms found in the internal energy function, summed of all pairs of atoms (r,l), where r is an atom of the receptor and l is an atom of the ligand. If the energy function approximates what is going on well enough then the docked conformation should have minimum energy value.  Some docking programs use alternative forms of scoring functions, but in all cases, the object is to find the state of the complex that has the least free energy, and therefore there is a balance between making functions fast to compute and making them reasonably approximate free energy.  Potential functions may also be used in simulations to study protein folding mechanisms and kinetics. </para>
+    	
+   </section>  
+<section id="terms">
+<title>Terms of energy functions</title>
+<para id="pterms">
+</para>
+
+<section id="bonds">
+<title>Bonds</title>
+<para id="pbonds">The bond energy term corresponds to the stretching and compressing of the length of a bond. In most energy functions this term reduces bonds to simple harmonic oscillators, yielding a quadratic equation:
+
+<m:math display="block">
+<m:apply>
+<m:eq/>
+  <m:ci>
+    <m:msub>
+      <m:mi> E </m:mi>
+      <m:mtext>bonds</m:mtext>
+    </m:msub>
+  </m:ci>
+  <m:apply>
+    <m:times/>
+      <m:ci> 
+        <m:msub>
+          <m:mi>K</m:mi>
+          <m:mi>b</m:mi>
+        </m:msub>
+      </m:ci>
+    <m:apply>
+       <m:power/>
+         <m:apply>
+           <m:minus/>
+             <m:ci>b</m:ci>
+             <m:ci>
+               <m:msub>
+                 <m:mi>b</m:mi>
+                 <m:mn>0</m:mn>
+               </m:msub>
+             </m:ci>
+         </m:apply>
+         <m:cn>2</m:cn>
+    </m:apply>
+  </m:apply>
+ </m:apply>
+</m:math>
+
+where <m:math><m:ci><m:msub><m:ci>K</m:ci><m:mi>b</m:mi></m:msub></m:ci></m:math> is an empirically determined constant that depends on the atom types, <m:math><m:ci>b</m:ci></m:math> is the current bond's length, and <m:math><m:ci><m:msub><m:mi>b</m:mi><m:mn>0</m:mn></m:msub></m:ci></m:math> is the bonds length in equilibrium, which again depends on the atom types.
+In this case you can think of the bond as a spring, it has an equilibrium length that it wants to remain at. If the bond length varies from the equilibrium length, the energy increases. 
+
+<!--
+In reality, the behavior is anharmonic as it takes more energy to compress a bond than it does to stretch a bond the same distance. This can be modeled by the Morse function:
+
+
+<m:math display="block">
+<m:apply>
+<m:eq/>
+  <m:ci>
+    <m:msub>
+      <m:mi> E </m:mi>
+      <m:mtext>bonds</m:mtext>
+    </m:msub>
+  </m:ci>
+  <m:apply>
+    <m:times/>
+      <m:ci> 
+        <m:msub>
+          <m:mi>D</m:mi>
+          <m:mi>c</m:mi>
+        </m:msub>
+      </m:ci>
+    <m:apply>
+       <m:power/>
+         <m:apply>
+           <m:minus/>
+             <m:apply>
+               <m:power/>
+                 <m:ci>e</m:ci>
+                 <m:apply>
+                   <m:times/>
+                     <m:apply>
+                       <m:minus/>
+                       <m:mi>A</m:mi>
+                     </m:apply>
+                     <m:apply>
+                        <m:minus/>
+                        <m:ci>r</m:ci>
+                        <m:ci>
+                           <m:msub>
+                             <m:mi>r</m:mi>
+                             <m:mn>0</m:mn>
+                           </m:msub>
+                        </m:ci>
+                     </m:apply>
+                 </m:apply>
+               </m:apply>
+             <m:mn>1</m:mn>
+         </m:apply>
+         <m:cn>2</m:cn>
+    </m:apply>
+  </m:apply>
+ </m:apply>
+</m:math>
+
+where <m:math><m:ci><m:msub><m:ci>D</m:ci><m:mi>c</m:mi></m:msub></m:ci></m:math> is the bond strength, <m:math><m:ci>r</m:ci></m:math> is the current bond length, and <m:math><m:ci><m:msub><m:ci>r</m:ci><m:mn>0</m:mn></m:msub></m:ci></m:math> is the equilibrium bond length.
+-->
+</para>
+<!--
+<para id="nonh2">
+Higher powers can be added to the harmonic equation to help simulate the Morse function, but the more popular energy functions the quadratic approximation is a good enough and simplier. For example:
+
+
+</para>
+<figure id="highbonds">
+<media type="image/png" src="highbonds.png"/>
+</figure>
+-->
+
+</section>	
+
+<section id="angles">
+<title>Bond Angles</title>
+<para id="pangles">The bond angle energy corresponds to changes in the angle between bonds. As with bond length, the bond angles have an equilibrium value, and any deviation increases the potential energy. Once again this can be modeled by a simple quadratic term.
+
+<m:math display="block">
+<m:apply>
+<m:eq/>
+  <m:ci>
+    <m:msub>
+      <m:mi> E </m:mi>
+      <m:mtext>angles</m:mtext>
+    </m:msub>
+  </m:ci>
+  <m:apply>
+    <m:times/>
+      <m:ci> 
+        <m:msub>
+          <m:mi>K</m:mi>
+          <m:mi>θ</m:mi>
+        </m:msub>
+      </m:ci>
+    <m:apply>
+       <m:power/>
+         <m:apply>
+           <m:minus/>
+             <m:ci>θ</m:ci>
+             <m:ci>
+               <m:msub>
+                 <m:mi>θ</m:mi>
+                 <m:mn>0</m:mn>
+               </m:msub>
+             </m:ci>
+         </m:apply>
+         <m:cn>2</m:cn>
+    </m:apply>
+  </m:apply>
+ </m:apply>
+</m:math>
+where <m:math><m:ci><m:msub><m:ci>K</m:ci><m:mi>θ</m:mi></m:msub></m:ci></m:math> is an empirically determined constant, <m:math><m:ci>θ</m:ci></m:math> is the current bond angle, and <m:math><m:ci><m:msub><m:mi>θ</m:mi><m:mn>0</m:mn></m:msub></m:ci></m:math> is the equilibrium angle.
+
+</para>
+
+<!--
+<para id="pangles2">
+Other ways of modeling the bond angle term incluse using a Fourier expansion in THETA (replace this). This describes large motions better.
+</para>
+<figure id="fangle">
+<media type="image/png" src="fangle.png"/>
+</figure>
+<para id="pangles3">
+Other energy functions add higher order terms to the bond angle term in order to approximate better. 
+</para>
+<figure id="highangle">
+<media type="image/png" src="highangle.png"/>
+</figure>
+-->
+</section>
+
+
+<section id="torsions">
+<title>Torsions</title>
+<para id="ptor">Torsions are created by series of three bonds, and consist of rotations of the bonds on either end with respect to the axis of the middle bond.
+In molecular structure certain torsional angles are preferred over others and the energy function reflects this. Usually it is described by a Fourier series expansion. The simplest being a single term:
+</para>
+<figure id="dihesimple"><media id="idp2189072" alt=""><image src="../../media/dihesimple.png" mime-type="image/png"/></media>
+
+<caption>A typical torsional energy term for a potential function.</caption></figure>
+<para id="ptor2">
+A more complicated three term expansion can also be used:
+</para>
+<figure id="dihecomplex"><media id="idp3668192" alt=""><image src="../../media/dihecomplex.png" mime-type="image/png" width="700"/></media>
+
+<caption> A more complicated torsional energy term for a potential function. </caption></figure>
+</section>
+
+<section id="vdw">
+<title>Van der Waals Interactions and Steric Clash</title>
+<para id="pvdw">
+Strictly speaking, Van der Waals interactions are weak attractive interactions between atoms at an ideal separation from each other.  The atoms transiently induce each other's electron distribution into complementary dipoles, allowing a weak electrostatic attraction between them.  In molecular potential fields, Van der Waals attractions are usually combined with steric clash (extremely high energies due to overlapping atoms) in a Lennard-Jones potential, such as this Lennard-Jones 12-6 function:
+
+<!--
+</para>
+<figure id="vdwplot"><media type="image/png" src="vdwplot.png"/>
+</figure>
+
+<para id="vdw2">
+A typical example is the Lennard-Jones 12-6 function: 
+-->
+</para>
+<figure id="vdwfig"><media id="idp6057392" alt=""><image src="../../media/lennard-jones.jpg" mime-type="image/jpeg" width="600"/></media>
+
+<caption> A typical Lennard-Jones 12-6 potential. </caption></figure>
+
+
+<para id="vdw3">
+<!--
+Other ways of modeling include using a exponential function:
+</para>
+<figure id="vdwexpfig">
+<media type="image/png" src="vdwexpfig.png"/>
+</figure>  
+-->
+</para>
+
+</section>
+
+<section id="elec">
+<title>Electrostatic Interactions</title>
+<para id="pelec">
+Electrostatic interactions are usually computed using some variant of Coulomb's Law, which assumes that atoms behave as point charges located at their centers. A typical Coulombic term looks like this:
+</para>
+<figure id="elecfig"><media id="idp5611744" alt=""><image src="../../media/elecfig.png" mime-type="image/png"/></media>
+<caption>Electrostatic energy is computed using a version of Coulomb's Law.</caption></figure>
+
+
+<para id="pelec2">
+<!--
+A few energy functions use bond dipoles MU (replace) and then use Jeans formula to calculate electrostatics:
+</para>
+<figure id="elecfig2">
+<media type="image/png" src="elecfig2.png"/>
+</figure>
+-->
+</para>
+
+<para id="pelec3">
+The dielectric constant is a function of the medium through which the two charges interact.  The difference between the dielectric constant of water and that of pure protein is substantial, so some models attempt to take it into account.  One of the simplest assumes that the farther apart two charges are, the more likely they are to have water between them.  This is called a distance-dependent dielectric, because it scales with the distance between the atoms involved.
+</para>
+</section>
+
+<section id="other">
+<title>Other Classes of Interactions</title>
+<para id="pother">
+While all of the previous terms are almost always included in energy functions, there are a handful of other terms that are common, but not present in every function. These include hydrogen bonding, solvation and cross terms. 
+</para>
+<para id="pother2">
+Hydrogen bonds (which are not true bonds in the strict, electron-sharing sense) are unusually strong electrostatic interactions, usually between a hydrogen atom and an electronegative atom such as oxygen or nitrogen. They play an important role in determining and maintaining the structure of biomolecules including proteins and nucleic acids. Some energy functions account for hydrogen bonding in the electrostatic term. Other functions include a separate hydrogen bonding term which is most often a Lennard-Jones-like 12-10 potential:
+</para>
+<figure id="hydro"><media id="idm115552" alt=""><image src="../../media/hydro.png" mime-type="image/png"/></media>
+
+<caption> A hydrogen-bonding 12-10 term for potential functions. </caption></figure>
+<para id="pother3">
+The solvent that a molecule is in can have a large effect on how it moves. Explicitly representing solvent molecules, however, is a computational cost that most methods try to avoid.  Usually the solvent model is separate from the energy function. There are several different ways of approximating solvent interactions including the Generalized Born Model and the Poisson-Boltzmann method. Most force fields do not have an explicit solvent term.
+</para>
+<para id="pother4">
+Other terms that describe the interaction between bonds and angles, angles and torsions and so on are included in some force fields. For example to model the interaction between bonds and angles:
+</para>
+<figure id="sb"><media id="idp2168912" alt=""><image src="../../media/sb.png" mime-type="image/png"/></media>
+
+<caption> A potential energy term depending on both bond lengths and angles. </caption></figure>
+</section>
+</section>
+
+<section id="param">
+<title>Parameters</title>
+<para id="pparam">
+All of the terms presented above include one or more atom-type-dependent constants, or parameters. Determining these parameters is the major problem in developing a new potential function. These parameters are typically found by fitting calculated results to experimental data.  Detailed quantum analysis of small molecules may also be used to set some constants.  Regardless of how it is determined, it is important to remember that all potential fields are approximations, and most are best suited for some types of proteins over others.
+</para>
+</section>
+
+<section id="functions">
+<title>An Example:  The CHARMM All-Atom Empirical Potential</title>
+<para id="pcharmm">
+CHARMM (Chemistry at HARvard Macromolecular Mechanics) refers to both a program for macromolecule dynamics and mechanics and the energy function developed for use in that program. CHARMM is a popular force field used mainly for the study of macromolecules. In the most recent version, the parameters were created using experimental data and supplemented with ab initio results. The CHARMM energy function has the form:
+</para>
+<figure id="charmmfig"><media id="idp2933472" alt=""><image src="../../media/charmmfig.png" mime-type="image/png" width="700"/></media>
+<caption>The CHARMM all-atom empirical potential function</caption></figure>
+<para id="pcharmm2">For more information on CHARMM and the CHARMM force field, please see 
+<link url="http://www.scripps.edu/brooks/charmm_docs/charmm.html">The CHARMM website.</link>
+
+<!--
+</para>
+</section>
+
+<section id="amber">
+<name>AMBER</name>
+<para id="pamber">
+AMBER (Assisted Model Building with Energy Refinement) also refers to both a package of programs for simulating molecules and a set of force fields. AMBER is another popular all-atom energy function for use with macromolecules. Its parameters have been developed mainly by using ab initio methods. AMBER's form is very similar to CHARMM's:
+</para>
+<figure id="amberfig">
+<media type="image/png" src="amberfig.png"/>
+</figure>
+<para id="pamber2">
+<link src="http://amber.scripps.edu/"> The AMBER website.</link>
+</para>
+</section>
+
+<section id="gromos">
+<name>GROMOS</name>
+<para id="pgromos">
+GROMOS (GROningen MOlecular Simulation) is also a molecular simluation package that includes the GROMOS force field. It was originally written for simulation of portein molecules but has expanded to be general purpose. The general GROMOS force field was developed for use with proteins, nucleotide and sugars in aqueous or apolar solutions. There is also a gas phase version for simulation of isolated molecules. 
+</para>
+<figure id="gromosfig">
+<media type="image/png" src="gromosfig.png"/>
+</figure>
+<para id="pgromos2">
+<link src="http://www.igc.ethz.ch/gromos/">The GROMOS website.</link>
+</para>
+</section>
+
+<section id="mm">
+<name>MM2/MM3</name>
+<para id="pmm">
+The MM2 and MM3 force fields were originally created for use with hydrocarbons. The terms used are fairly different from the terms used in the previous energy functions. This is because the systems that this energy function was developed for are different. The force field you choose to use depends greatly on the system you are trying to model. The MM2 force field has the form:
+</para>
+<figure id="mmfig">
+<media type="image/png" src="mmfig.png"/>
+</figure>
+<para id="pmm2">
+<link src="http://europa.chem.uga.edu/">Allinger's Molecular Mechanics Research Lab's website.</link>
+</para>
+</section>
+
+<section id="tripos">
+<name>Tripos</name>
+<para id="ptripos">
+The Tripos force field was developed mainly for small organic molecules. It comes with Tripos' software packages SYBYL.
+</para>
+<figure id="triposfig">
+<media type="image/png" src="triposfig.png"/>
+</figure>
+<para id="ptripos2">
+<link src="http://www.tripos.com">The Tripos website.</link>
+</para>
+</section>
+</section>
+-->
+</para>
+</section>
+</section>
+
+<section id="Applications">
+<title>Applications of Roadmap Methods</title>
+<section id="Kinetics">
+<title>Kinetics of Protein Folding</title>
+
+<para id="element-484">The two standard methods of simulating protein motion are molecular dynamics simulation (MD) and Monte Carlo simulation (MC).  In MD, a molecule or system of molecules is given an initial set of atomic momenta, placed in a potential field, and allowed to evolve over time following Newton's equations of motion and the forces exerted on it by the field.  In MC, a series of perturbations is applied to a single molecule.  After each perturbation, if the estimated energy of the molecule has decreased, the perturbed conformation is used for the next step of the simulation.  If the energy has increased, the perturbed conformation might be accepted, with a probability that drops off sharply as the energy change increases.  Otherwise, the perturbed conformation is rejected and the previous conformation is perturbed again.  Properly implemented MC or MD simulations, run for long enough, should generate a series of conformations with a Boltzmann-like distribution of structures (see the first section of this module for a reminder of what the Boltzmann distribution looks like).</para>
+<para id="element-843">The problem with these methods is that they are very slow.  A single MD simulation of a few nanoseconds of motion for an average-size protein, performed on a cluster of processors, can take days, and such simulations are of limited reliability due to approximations of energy and to the extremely short time periods that can be simulated in a reasonable amount of CPU time.  Simulations must be repeated to determine what a reasonable, average behavior might look like.  Some protein rearrangement events take place on a scale of microseconds, milliseconds, or even seconds, so a trajectory of a few nanoseconds cannot hope to capture these low-frequency events.</para>
+
+<para id="element-418">The field of chemical kinetics is concerned with the rate at which chemical processes take place, and therefore, the pathways and mechanisms by which they occur.  In protein biochemistry, one of the major open questions is the protein folding problem:  Given a protein, and its folded (native) and unfolded (denatured) structures, what is the mechanism by which the protein folds into its native state?  Currently (2006), it is possible to determine in the laboratory the rate at which a protein folds and sometimes the form of its transition state, the highest energy conformation(s) it assumes in the process of folding.  These laboratory measurements can be compared to those inferred from simulation, and the quality of the simulation can thereby be indirectly estimated.</para>
+
+<para id="element-181">Roadmap-based algorithms to study this problem began with work by Latombe, Singh, and Brutlag in 1999 <cite target-id="latombesingh"/>, in which they attempted to use a PRM to find and study protein binding pockets.  This work led directly to that of Song and Amato, Apaydin and Latombe, and Singal and Pande, all presented below.  Existing methods as of early 2006 are presented.</para>
+
+<section id="Amato">
+<title>A PRM-Based Approach</title>
+<para id="Amato1">The research group of Nancy Amato has been working on roadmap-based methods to study the process of protein folding <cite target-id="amatoa"/><cite target-id="amatob"/><cite target-id="amatoc"/><cite target-id="amatod"/>.  They start with the known native structure of a protein, and incrementally find conformations more and more different from the native state, and build a roadmap using these conformations.  The goal is to find a large ensemble of pathways between the native structure and unfolded structures, and to study these pathways and their properties.  In their work, the degrees of freedom of the protein are assumed to be the φ and ψ backbone dihedral angles of each amino acid residue.  The side chains are assumed to be rigidly attached to the backbone.  In their initial work, they generated new conformations for their roadmaps by adjusting the backbone dihedral angles in the folded conformation randomly with various standard deviations.  This approach worked well for very small proteins, but did not scale well.</para>
+
+<para id="element-129">A later sampling approach was based on counting <emphasis>native contacts</emphasis>.  For the purposes of their method, a native contact was defined as any two alpha-carbons within 7 Å of each other in the folded state of the protein.  A new conformation is generated at each step of the sampling phase of the roadmap construction by randomly perturbing some existing sample.  The resulting structure was accepted with a probability as follows:
+
+<figure id="AmatoAcceptance"><media id="idp848432" alt=""><image src="../../media/amatoacceptance.jpg" mime-type="image/jpeg"/></media>
+
+<caption>The acceptance criterion for newly sampled conformations.</caption></figure>
+
+The energy, E, used in this research includes a term favoring known secondary structure contacts, and a Lennard-Jones 12-6 term as presented in the previous section.  The parameters of the Lennard-Jones term are selected to favor interactions between H and O atoms, and thus hydrogen bonds.  The energy thresholds for acceptance are decided by experiment.  If accepted, a structure is placed in a bin corresponding to the number of native contacts present, with one bin for each possible number of native contacts from 1 to n.  The procedure begins by sampling around structures in the 100% native contacts bin (initially, just the native structure).  Once the next bin, with one fewer contacts, is full, samples are made by perturbing structures in that bin.  Thus, the sampling generally proceeds from structures with all native contacts to structures with very few native contacts.</para><para id="element-576">Once the samples are generated, an attempt is made to connect the k nearest neighbors of each node to the node itself.  A series of conformations on the line connecting the two nodes are tested, and if their energy is below a threshold, the edge is included in the roadmap.  The weight of the edge depends on the sequence of energies of the conformations computed along the connecting line.  The probability of moving from the (i-1)th structure to the ith along the line is given by:
+
+<figure id="AmatoProbability"><media id="idp6121952" alt=""><image src="../../media/amatoprobability.jpg" mime-type="image/jpeg"/></media>
+</figure>
+
+The weight of an edge is the sum of the logarithms of the probabilities, and is intended to represent the energetic feasibility of making the transition from the conformation represented by one node to the next.  This assumes that moving from one node in the roadmap to an adjacent one consists of a series of move along the edge, each associated with a probability.  Note that in reality, the path taken by a protein transitioning between two structures need not be a straight line in conformation space.</para>
+
+<para id="element-51">Once the roadmap is computed, the shortest paths between structures can be found using Djikstra's algorithm, and the folding paths can be extracted and studied.  In particular, the order of secondary structure formation can be predicted by a consensus method.  The order of secondary structure formation is determined for all paths in the roadmap from unfolded to folded structures, and the most common order is predicted as the true order of formation, which is a coarse, high-level expression of the folding mechanism.  On a set of proteins used to test their method, the predicted formation order matched laboratory-determined formation order in all cases where it was available.  Because of the coarseness of this notion of the folding mechanism, a statistical analysis of all pathways makes sense.</para>
+
+<para id="element-896">In their most recent work <cite target-id="amatod"/>, these researchers have refined the method by which new structures are generated in the sampling phase of roadmap construction.  This method is based on <emphasis>rigidity analysis</emphasis>.  For each structure, each degree of freedom is determined to be independently flexible, dependently flexible, or rigid, using an algorithm called the <emphasis>Pebble Game</emphasis> <cite target-id="jacobs"/>.  Independently flexible degrees of freedom rotate with no deterministic effect on others.  Dependently flexible degrees of freedom force other degrees of freedom to change in a set way.  Rigid degrees of freedom are essentially locked in place unless the constraints change.  In perturbing an existing structure to generate a new sample, degrees of freedom are perturbed with a strong bias towards perturbing independently flexible degrees of freedom and against perturbing rigid degrees of freedom.  Because the new structures are generated by physically realistic motions, it is expected that they will generally be lower energy and more representative of real structures than if they were generated by completely random perturbation of the degrees of freedom.</para>
+
+<para id="element-858">In practice, rigidity sampling appears to allow construction of high-quality roadmaps with many fewer samples than were necessary without it.  It thus improves the overall efficiency of calculating protein behavior using this roadmap method.</para>
+</section>
+
+<section id="SRS">
+<title>Stochastic Roadmap Simulations</title>
+<para id="element-995">Numerous variants of MD and MC have been developed in an effort to speed up the process or focus the simulations on particular motions of interest.  One method, called the <term>Stochastic Roadmap Simulation (SRS)</term> <cite target-id="apaydina"/> <cite target-id="apaydinb"/> <cite target-id="apaydinc"/> <cite target-id="apaydind"/> uses a PRM-like structure to approximate a large number of simultaneous MC simulations very rapidly, allowing the analysis of an ensemble of trajectories.  This method followed very directly from the first roadmap studies of molecular properties by Singh and Latombe.</para><para id="element-341">The SRS method proceeds as follows:
+
+<list id="SRSAlgorithm"><item>N samples are made uniformly at random by selection of a random value for each dihedral angle.</item>
+
+<item>The k nearest neighbors for each sample are found.</item>
+
+<item>For each sample, a transition probability is calculated to each of its nearest neighbors, depending on their energy difference as follows:
+<figure id="SRSTransitionProbability"><media id="idp6085056" alt=""><image src="../../media/srsprobability.jpg" mime-type="image/jpeg"/></media>
+
+<caption>Transition probabilities for SRS.</caption></figure>
+
+The energy, E, in this method is based on the hydrophobic-polar (H-P) energy model, and includes two terms, one favoring hydrophobic interactions, and the other depending on the solvent-excluded volume.
+Note the difference between the transition probabilities calculated by this method and those calculated by the method presented in the previous section.  These probabilities depend only on the energies of the endpoints of an edge, whereas those of the other method depend on the energy along the path between the endpoints.  The probabilities of the SRS method are faster to calculate, and, assuming that the system is at equilibrium, more likely to be consistent with the actual distribution of conformations.
+
+</item>
+<item>Each sample is given a self-transition probability as follows, so that the sum of outgoing edge probabilities for each node is 1:
+<figure id="SRSSelfTransitionProbability"><media id="idp1557712" alt=""><image src="../../media/srsselfprobability.jpg" mime-type="image/jpeg"/></media>
+
+
+<caption>Self-transition probabilities ensure that the total transition probability is 1.</caption></figure>
+</item></list></para><para id="element-234">The transition probabilities are defined as they are to be consistent with a Boltzmann-like distribution of energies, and therefore with standard Monte Carlo simulation probabilities.  The authors demonstrated that each continuous path in the roadmap may be interpreted as a Monte Carlo simulation, and that, if a very large number of samples and edges are made, the aggregate behavior of these Monte Carlo simulations can be analyzed to estimate properties of the protein such as <emphasis>folding rates</emphasis> and <emphasis>transition states</emphasis>.  Essentially, SRS is a way to generate large amounts of Monte Carlo simulation data in a short time.  The developers or this method have provided a proof that, for a sufficiently large SRS and a sufficiently long Monte Carlo simulation, the distribution of conformations is expected to be equal.</para><para id="element-367">To study protein folding using SRS, we observe that some set of nodes in the roadmap represent conformations in or very close to the folded state (native structure).  We will refer to this set of nodes as F.  For every node in the roadmap, we can compute an expected number of state transitions (or Monte Carlo steps) to go from that state to a node in F, with the base case that any node in F is defined to be at distance 0 from F.  Given a precomputed SRS, we can compute this statistic for each node as follows:
+
+<figure id="StepsToFolded"><media id="idp1616816" alt=""><image src="../../media/srsstepstofolded.jpg" mime-type="image/jpeg"/></media>
+
+<caption>The expected number of transitions to reach a node in the folded state starting from node i.</caption></figure>
+
+This implies a system of linear equations on the variables ti.  This system can be solved by an iterative numerical method such as Jacobi iteration.  The solution is an estimate for each node of the average number of Monte Carlo steps necessary to achieve a folded conformation.</para><para id="element-174">We can also define a set of nodes representing conformations close to the stable denatured state of the protein as the unfolded state, U.  Given both of the sets U and F, we can define a quantity called the transmission coefficient, τ, for each node.  The transmission coefficient expresses the probability that a structure at a particular node will proceed to a state in F before it reaches a state in U--in other words, it is the probability that a given structure will fold before it unfolds.  This is often called the folding probability, or Pfold, in more recent research.  The quantity, τ, is calculated for each node using the following relation:
+
+<figure id="SRSPfold"><media id="idp1603552" alt=""><image src="../../media/srspfold.jpg" mime-type="image/jpeg"/></media>
+
+<caption>The folding probability for a node i.  This is the probability than a simulation starting at node i reaches a folded state before reaching an unfolded state.</caption></figure>
+
+As before, this relation implies a system of linear equations, this time on τi, the τ-value of each node.  Again, it can be solved iteratively, and the result is a Pfold (τ) value for each node.  Pfold is an interesting statistic in studying the mechanism of protein folding because structures with a true (as opposed to simulation-derived) Pfold of 0.5 have equal probability of going to the folded or unfolded states, and therefore each one is the highest energy structure on some folding pathway.  These are the structures that constitute the <emphasis>transition state ensemble (TSE)</emphasis> of the protein, and study of these structures may provide insight into the mechanism by which the protein folds.</para><para id="element-67"><!-- SRS has also been applied to study protein-ligand docking pathways, specifically, the paths taken by a ligand to escape the binding pocket of a protein.  Escape times for the ligand can be calculated by the same method as folding times above (in terms of Monte Carlo steps).  Moreover, when running simulations with mutant versions of the protein, in which particular amino acid residues are changed, the escape times change.  In initial testing, these changes were found to be consistent with the expected effect of the mutation on the affinity of the protein for the ligand, with greater affinity correlating with longer escape times. --></para>
+</section>
+
+<section id="Pande">
+<title>Markovian State Models</title>
+<para id="Pande1"><emphasis>Markovian State Models (MSM)</emphasis> <cite target-id="pandea"/> <cite target-id="pandeb"/> are roadmaps constructed by running many molecular simulations (Monte Carlo and molecular dynamics) and merging the trajectories.  The method starts with a simulation that runs from the folded to unfolded state.  It then picks a structure at random (call it c) from this trajectory and run a new simulation.  If this new simulation reaches the unfolded state, then the next trajectory from which we will pick a structure will consist of the old trajectory from the folded state to c, and the new trajectory from c to the unfolded state.  If the new trajectory reaches the folded state, we do the opposite.  If neither happens in a reasonable time, we reject the new trajectory and start over.  This is repeated a set number of times, and each time a trajectory is accepted, all states from the new part of the trajectory are added to the growing roadmap as nodes, and each transition from the trajectory is added as an edge.  When it is added, each edge is labeled with a transition probability of 1 and a transition time equal to the timestep of the simulation.</para>
+
+<para id="element-107">The goal of this method is to move roadmap methods closer to MD and MC simulations, and in particular to incorporate a notion of time, which follows from the use of simulation techniques in the sampling of new conformations.</para>
+
+<para id="element-504">Once all of the simulations have been run, nodes that are within some cutoff distance of each other by some similarity metric must be merged.  To merge two nodes, one node is removed, and its edges are transferred to the other node.  If this results in two edges between the same pair of nodes, the transition probabilities and times are defined as follows:
+
+<figure id="PandeEdgeMerging"><media id="idp3057808" alt=""><image src="../../media/pandeedgemerging.jpg" mime-type="image/jpeg"/></media>
+
+<caption>Expressions for new transition probabilities and transition times when merging nodes in constructing a MSM.</caption>
+</figure>
+
+Once all merges are complete, the transition probabilities for each edge are normalized to the range [0,1] such that the sum of all outgoing edge probabilities from a node is 1.  Given the roadmap, Pfold values and folding times can be calculated using the edge probabilities and step times.  The approach is the same as with SRS: A system of equations is set up, but instead of Pfold, the value of interest is the expected time for a simulation starting at node i to reach a folded state, called the <term>mean first passage time (MFPT)</term>.  The system of equations is solved using standard numerical methods, as with SRS.  On tests of a small protein, called tryptophan zipper beta hairpin, or TZ2, the predicted folding rates agreed well with experiment.</para>
+
+<para id="element-795">An important fact of all roadmap methods that attempt to extrapolate properties of the entire protein folding landscape is that there is inherent sampling error.  The energy landscape of a protein is a continuous function, which roadmap methods attempt to approximate through discrete sampling.  The researchers who developed the MSM method also developed a method to estimate the error of the folding rates estimated based on MSMs <cite target-id="pandeb"/>.  While a complete description is beyond the scope of this module, the details are available in the 2005 paper by Singhal and Pande linked in the Recommended Reading section below.  The error analysis allows them to generate a probability distribution for the folding times for each node in the MSM.  Useful in its own right because it gives us an idea of how confident we can be in folding times generated by a given MSM, this analysis is especially useful for focusing sampling during the generation of an MSM.</para>
+
+<para id="element-370">The variance of the distribution of the folding time for each node provides an estimate of the error.  If at each stage of simulation instead of choosing a node at random to start the next simulation, we select the node with the greatest contribution to our estimate of the error in folding time, we effectively focus our efforts where they will decrease the error most.  In this way, MSMs with less overall error may be generated with using simulations.</para>
+</section>
+</section>
+<section id="Docking">
+<title>Protein-Ligand Docking Pathways and Kinetics</title>
+<para id="Docking1">So far, we have looked at applications of roadmap methods that deal with the single-body problem of protein folding.  The first use of roadmaps in molecular modeling, however, was to study the two-body system of protein-ligand docking.  The docking problem itself is, given a small molecule and a protein, to predict whether they will bind to form a complex, and if so, what will be the geometry and stability (binding affinity) of this complex.  This problem is path-independent, and so does not lend itself to motion planning approaches.  Roadmaps can be used, however, to study the question of how a ligand reaches or exits the binding pocket of a protein, what the energy profile of this process looks like, and the rate at which the ligand binds and dissociates.</para>
+
+<para id="element-533">Typically, in modeling protein-ligand docking with a roadmap, the protein is held rigid and induces a force field in which the ligand is free to rotate, translate, and change conformation.  The first work in this area, by Latombe, Singh, and Brutlag <cite target-id="latombesingh"/>, led a few years later to the SRS framework.  An SRS for ligand docking pathways can be constructed be starting with the ligand in the bound state, and generating samples for its conformation, location, and orientation in, around, and outside the binding pocket of the protein.  These paths can then be studied individually to examine features of the binding process, or as an aggregate to get properties such as binding affinity or escape time, which is represented in an SRS by the weight of paths away from the bound state.</para>
+
+<para id="element-745">To validate their method for studying docking, the developers of SRS showed <cite target-id="apaydinb"/> that the escape times (in Monte Carlo steps) calculated for ligands leaving proteins with particular mutations in their binding sites were consistent with the expected effect of the mutations:  Mutations expected to increase the binding affinity led to longer escape times, and mutations expected to decrease the binding affinity led to shorter escape times.  They also showed that SRS could be used to distinguish between the binding site of the protein and other pockets on its surface.  Ligands had significantly greater estimated escape times from the true binding site than from spurious ones.</para>
+
+<para id="element-437">Cortes et al. <cite target-id="simeon"/> developed a tree-based sampling method for studying protein-ligand docking pathways.  The algorithm is based on the dynamic-domain RRT planner (see <link document="m11457">Robotic Path Planning and Protein Modeling</link> for an introduction to RRTs and other tree-based motion planners), in which, when sampling a random point toward which to expand, the location of that point is restricted to be within some distance of the existing tree, rather than anywhere in the whole space.  The sampling method is based on the geometry of the system being studied:  The major factors contributing to the energy of a conformation are reduced to geometric criteria.  Hydrogen bonds and hydrophobic interactions are modeled by distance constraints.  Steric clash is handled by treating atoms as hard spheres and performing collision checks using a fast collision checker called BioCD, developed by the same research group.  Only structures satisfying all geometric constraints are subjected to an energy minimization procedure.  The geometric constraints help ensure that structures to be added to the tree are already fairly low-energy, ensuring that the minimization can be done quickly, and that time is not wasted minimizing unrealistic structures.</para><para id="element-28">This work was applied to studying the <emphasis>enantioselectivity</emphasis> of various proteins.  <emphasis>Enantiomers</emphasis> are molecules that are non-superimposable mirror images of each other.  Although they contain the same atom types and connectivity, enantiomers of a given chemical cannot be interconverted without breaking and reforming bonds.  Molecules may contain multiple sites where this kind of asymmetry exists, in which case the molecule may exist as a whole family of <emphasis>diasteroemers</emphasis>.  Most biological molecules have at least one asymmetric center, and are therefore said to be <emphasis>chiral</emphasis>, and in most cases, only one diastereomer or enantiomer exists in appreciable quantity.  The chemistry of a pair of enantiomers is identical <emphasis>except</emphasis> when they are interacting with other chiral molecules, in which case it is important that the correct diastereomer is present for the desired interaction.</para><para id="element-93">Enantioselectivity is the ability of a protein to distinguish between the two enantiomers of a molecule.  Since proteins are chiral, they exhibit enantioselectivity for enantiomeric ligands.  In the tree-based method of Cortes et al, the amount of time it takes their planner to find an unbound state for a ligand turns out to be correlated with the difficulty of maneuvering the ligand into and out of the binding pocket.  Thus, computation times for finding a path out of the binding pocket are much less for the preferred enantiomer of the ligand than for the other enatiomer, often by a factor of 10 or more.</para>
+</section>
+<para id="element-227"><title> Recommended Reading </title>
+ <list id="PDFs">
+
+<item> A PRM-Based Approach<list id="AmatoReading"><item>Amato, N. M. and G. Song.  <link url="http://doi.acm.org/10.1145/369133.369239">PDF</link>.  Using motion planning to study protein folding pathways.  Journal of Computational Biology 9:149-168, 2002.</item>
+
+<item>Amato, N. M., K. A. Dill, and G. Song.  <link url="http://www.liebertonline.com/doi/abs/10.1089%2F10665270360688002">PDF</link>.  Using motion planning to map protein folding landscapes and analyze folding kinetics of known native structures.  Journal of Computational Biology 10:239-255, 2003. </item>
+
+<item>Thomas, Shawna, Guang Song and Nancy M. Amato.  <link url="http://www.iop.org/EJ/article/1478-3975/2/4/S09/ph5_4_s09.pdf">PDF</link>.  Protein Folding by Motion Planning.  Physical Biology 2:S148-S155, 2005.</item>
+
+<item>Thomas, Shawna L., Xinyu Tang, Lydia Tapia, and Nancy M. Amato.  <link url="http://www.springerlink.com/link.asp?id=w06g6wg14p1j4w2x">PDF</link>.  Simulating Protein Motions with Rigidity Analysis.  Proceedings of the 2006 ACM International Conference on Research in Computational Molecular Biology (RECOMB), pp. 394-409. </item>
+ </list></item>
+
+
+<item> Strochastic Roadmap Simulations <list id="SRSReading"><item> Apaydin, M.S., A. P. Singh, D. L. Brutlag and J.-C. Latombe.  <link url="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=932670">PDF</link>.  Capturing Molecular Energy Landscapes with Probabilistic Conformational Roadmaps.  Proceedings of the 2001 IEEE International Conference on Robotics and Automation, pp. 932-939.</item>
+
+<item> Apaydin, M. S., C.E. Guestrin, C. Varma, D.L. Brutlag, and J.-C. Latombe.  <link url="http://bioinformatics.oxfordjournals.org/cgi/reprint/18/suppl_2/S18">PDF</link>.  Stochastic roadmap simulation for the study of ligand-protein interactions.   Bioinformatics, 18(s2):18-26, 2002.</item> 
+
+<item> Apaydin, M. S., D. L. Brutlag, C. Guestrin, D. Hsu, J.-C. Latombe and C. Varma.  <link url="http://portal.acm.org/citation.cfm?id=565196.565199">PDF</link>.  Stochastic roadmap simulation: an efficient representation and algorithm for analyzing molecular motion.  Journal of Computational Biology 10:257-281, 2003.</item>
+
+<item>Chiang, Tsung-Han, Mehmet Serkan Apaydin, Douglas L. Brutlag, David Hsu and Jean-Claude Latombe.   <link url="http://www.springerlink.com/link.asp?id=mw24x00572l733u6">PDF</link>. Predicting Experimental Quantities in Protein Folding Kinetics using Stochastic Roadmap Simulation.  Proceedings of the 2006 ACM International Conference on Research in Computational Molecular Biology (RECOMB), pp. 410-424.</item>
+ </list></item>
+
+ <item> Markovian State Models<list id="MSMReading"><item>Singhal, N., C. D. Snow and V. S. Pande.  <link url="http://scitation.aip.org/journals/doc/JCPSA6-ft/vol_121/iss_1/415_1.html">HTML</link>.  Using path sampling to build better Markovian state models: predicting the folding rate and mechanism of a tryptophan zipper beta hairpin.  Journal of Chemical Physics 121:415-425, 2004.</item>
+
+<item> Singhal, Nina and Vijay S. Pande.  <link url="http://scitation.aip.org/journals/doc/JCPSA6-ft/vol_123/iss_20/204909_1.html">HTML</link>.  Error analysis and efficient sampling in Markovian state models for molecular dynamics.  Journal of Chemical Physics 123:204909, 2005.</item>
+ </list></item>
+
+ <item> Docking Pathways and Kinetics<list id="SimeonReading"><item> Cortes, J, T. Simeon, V. Ruiz de Angulo, D. Guieysse, M. Remauld-Simeon and V. Tran.  <link url="http://bioinformatics.oxfordjournals.org/cgi/content/abstract/21/suppl_1/i116">PDF</link>.  A Path Planning Approach for Computing Large-Amplitude Motions of Flexible Molecules.  Bioinformatics 21(s1): i116-i125, 2005.</item>
+ </list></item>
+</list>
+ </para>
+</section>
+
+<!-- Removing sections on simulation, for now.
+<section id="minimization">
+<name>Minimization</name>
+<para id="min">
+If we are manipulating the conformation of a molecule then we might create distortions. In the case we would like to bring the conformation to a local minimum to help smooth out the distortions. There are many different ways of finding the minimum of a function, the more efficient ones use information from the first and/or second derivatives to find a minimum. Most energy function have both an analytic first and second derivative, and these can be used to find the minimum. In practice methods that only use the first derivative because evaluating the function and the derivatives can take a long time for larger systems. One of the more popular minimization techniques in programs today is conjugate gradient.  
+</para>
+<para id="min2">
+Minimizing functions is used in many other applications and so there are several different libraries out there for minimization. One free one for C++ is <link src="http://csmr.ca.sandia.gov/projects/opt++/opt++.html">OPT++</link>. A list of other options is located <link src="http://sal.kachinatech.com/B/3/">here</link>.
+</para>
+</section>
+
+<section id="md">
+<name>Molecular Dynamics</name>
+<para id="pmd">
+Molecule dynamics explores the motion of molecules. Newton's equation, which states that force is equal to mass times acceleration, is used to silumation atomic motion.
+</para>
+<equation id="newton">
+<name>Newton's Equation</name>
+<m:math>
+<m:apply>
+<m:eq/>
+<m:ci>F</m:ci>
+<m:apply>
+<m:times/>
+<m:ci>m</m:ci>
+<m:ci>a</m:ci>
+</m:apply>
+</m:apply>
+</m:math>
+</equation>
+<para id="pmd2">
+The velocity and acceleration of the the atoms is dictated by the forces the atoms exert on each other as described by Newton's equation. The force on an atom is the derivative of the energy with respect to the change in the atom's position. 
+</para>
+<equation id="energyderv">
+<m:math>
+ <m:apply>
+   <m:eq/>
+   <m:apply>
+    <m:minus/>
+    <m:apply>
+      <m:diff/>
+      <m:bvar>
+       <m:ci>r</m:ci>
+      </m:bvar>
+	<m:apply>
+	<m:ci type="fn">E</m:ci>
+	<m:ci>r</m:ci>
+	</m:apply>
+    </m:apply>
+   </m:apply>
+   <m:ci>F</m:ci>
+ </m:apply>
+</m:math>
+</equation>
+
+<para id="pmd3">
+Combining this with Newton's equation gives us
+</para>
+<equation id="pos">
+<m:math>
+<m:apply>
+<m:eq/>
+<m:apply>
+<m:minus/>
+<m:apply>
+<m:diff/>
+      <m:bvar>
+       <m:ci>r</m:ci>
+      </m:bvar>
+	<m:apply>
+	<m:ci type="fn">E</m:ci>
+	<m:ci>r</m:ci>
+	</m:apply>
+</m:apply>
+</m:apply>
+
+<m:apply>
+<m:times/>
+<m:ci>m</m:ci>
+<m:apply>
+<m:diff/>
+<m:bvar>
+<m:ci>t</m:ci>
+<m:degree>
+<m:cn>2</m:cn>
+</m:degree>
+</m:bvar>
+<m:ci>r</m:ci>
+</m:apply>
+</m:apply>
+</m:apply>
+</m:math>
+</equation>
+<para id="pmd4">
+Now that we know the forces and also the masses of the atoms we can solve for the positions of the atoms. We do this for each time step, which is normally very small, on the order of femtoseconds. As a result we get a series of snapshots on the structural changes, called a trajectory. There is no analytical solution to Newton's equation for our systems and so other techniques have to be used. There are several different algorithms to numerically integrate the equations of motion, including the <link src="http://www.ch.embnet.org/MD_tutorial/pages/MD.Part1.html#Verlet">Verlet</link>, <link src="http://www.ch.embnet.org/MD_tutorial/pages/MD.Part1.html#Leap-frog">Leap-frog</link>, <link src="http://www.ch.embnet.org/MD_tutorial/pages/MD.Part1.html#Velocity Verlet">Velocity Verlet</link> and <link src="http://www.ch.embnet.org/MD_tutorial/pages/MD.Part1.html#Beerman">Beeman's</link> algorithms.
+</para>
+<para id="pmd5">
+Molecular dynamics is a great tool but there are limitations. It is computationally expensive, simulations of much more than pico or nanoseconds are unreasonable. This prevents simulations of large conformation changes. Also, the energy functions are pretty good approximations, but not perfect so there can be limitations in this area also.
+</para>
+<para id="pmd6">
+There are various software packages out there to preform molecular dynamics simulations. One of the major free packages is <link src="http://www.ks.uiuc.edu/Research/namd/">NAMD </link>. <link src="http://www.ks.uiuc.edu/Research/vmd/">VMD</link> can be used to visual the results of your simlulation.
+</para>
+</section>
+
+<section id="web">
+<name>Other Websites</name>
+<para id="pweb">
+There any many websites out there discussing energy functions. Here are just a few:
+<list id="urls">
+<item><link src="http://www.ch.embnet.org/MD_tutorial/pages/MD.Part2.html">http://www.ch.embnet.org/MD_tutorial/pages/MD.Part2.html</link> - Potential Energy Function</item>
+
+<item><link src="http://cmm.info.nih.gov/modeling/guide_documents/molecular_mechanics_document.html">http://cmm.info.nih.gov/modeling/guide_documents/molecular_mechanics_document.html</link> - The Anatomy of a Molecular Mechanics Force Field</item>
+
+<item><link src="http://msdlocal.ebi.ac.uk/docs/mmrefs.html">http://msdlocal.ebi.ac.uk/docs/mmrefs.html</link> - Molecular Mechanics and Force Field References</item>
+
+<item><link src="http://linus.chem.wesleyan.edu/~mbjc/force.html">http://linus.chem.wesleyan.edu/~mbjc/force.html</link> - Force fields: definition and overview</item>
+
+<item><link src="http://cmgm.stanford.edu/biochem218/Projects%202001/Varma.pdf">http://cmgm.stanford.edu/biochem218/Projects%202001/Varma.pdf</link> - Molecular Mechanical Force Fields</item>
+
+<item><link src="http://mccammon.ucsd.edu/~chem215/lectures/special/special/node1.html">http://mccammon.ucsd.edu/~chem215/lectures/special/special/node1.html</link> - Comparison of Force Fields</item>
+
+<item><link src="http://www.cryst.bbk.ac.uk/PPS2/course/section7/os_pef.html">http://www.cryst.bbk.ac.uk/PPS2/course/section7/os_pef.html</link> - Potential Energy Functions and Simulation Methods</item>
+
+<item><link src="http://www.ncsc.org/training/materials/Software_Release/foundations/camd_md/node2.html#SECTION002">http://www.ncsc.org/training/materials/Software_Release/foundations/camd_md/node2.html#SECTION002</link> - Classical Modeling: Energy Functions</item>
+
+<item><link src="http://cmm.info.nih.gov/intro_simulation/node15.htmlh">http://www.ch.embnet.org/MD_tutorial/pages/MD.Part2.html</link> - The Empirical Potential Energy Function</item>
+
+<item><link src="http://www.ai.mit.edu/people/wang/main/node6.html">http://www.ai.mit.edu/people/wang/main/node6.html</link> - Energy Function</item>
+
+<item><link src="http://www.molvis.indiana.edu/app_guide/InsightII/forcefields.html">http://www.molvis.indiana.edu/app_guide/InsightII/forcefields.html</link> - Insight II Forcefields </item>
+
+
+
+</list>
+</para>
+</section>
+-->
+  </content>
+            <bib:file>
+              <bib:entry id="amatoa">
+		<bib:article>
+		  <bib:author> Amato, N. M. and G. Song </bib:author>
+		  <bib:title> Using motion planning to study protein folding pathways
+                  </bib:title>
+		  <bib:journal> Journal of Computational Biology </bib:journal>
+		  <bib:year>2002</bib:year>
+                  <bib:volume> 9 </bib:volume>
+		  <bib:pages> 149-168 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+	    
+              <bib:entry id="amatob">
+		<bib:article>
+		  <bib:author> Amato, N. M., K. A. Dill, and G. Song </bib:author>
+		  <bib:title> Using motion planning to map protein folding landscapes and analyze folding kinetics of known native structures
+                  </bib:title>
+		  <bib:journal> Journal of Computational Biology </bib:journal>
+		  <bib:year>2003</bib:year>
+                  <bib:volume> 10</bib:volume>
+		  <bib:pages> 239-255 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+             <bib:entry id="amatoc">
+		<bib:article>
+		  <bib:author> Thomas, Shawna, Guang Song and Nancy M. Amato</bib:author>
+		  <bib:title> Protein Folding by Motion Planning
+                  </bib:title>
+		  <bib:journal> Physical Biology </bib:journal>
+		  <bib:year>2005</bib:year>
+                  <bib:volume> 2</bib:volume>
+		  <bib:pages> S148-S155 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+             <bib:entry id="amatod">
+		<bib:article>
+		  <bib:author> Thomas, Shawna L., Xinyu Tang, Lydia Tapia, and Nancy M. Amato</bib:author>
+		  <bib:title> Simulating Protein Motions with Rigidity Analysis
+                  </bib:title>
+		  <bib:journal> Proceedings of the 2006 ACM International Conference on Research in Computational Molecular Biology (RECOMB) </bib:journal>
+		  <bib:year>2006</bib:year>
+		  <bib:pages> 394-409 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+             <bib:entry id="apaydina">
+		<bib:article>
+		  <bib:author> Apaydin, M.S., A. P. Singh, D. L. Brutlag and J.-C. Latombe</bib:author>
+		  <bib:title> Capturing Molecular Energy Landscapes with Probabilistic Conformational Roadmaps
+                  </bib:title>
+		  <bib:journal> Proceedings of the 2001 IEEE International Conference on Robotics and Automation
+</bib:journal>
+		  <bib:year>2001</bib:year>
+		  <bib:pages> 932-939 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+             <bib:entry id="apaydinb">
+		<bib:article>
+		  <bib:author> Apaydin, M. S., C.E. Guestrin, C. Varma, D.L. Brutlag, and J.-C. Latombe</bib:author>
+		  <bib:title> Stochastic roadmap simulation for the study of ligand-protein interactions
+                  </bib:title>
+		  <bib:journal> Bioinformatics</bib:journal>
+		  <bib:year>2002</bib:year>
+                  <bib:volume> 18(s2)</bib:volume>
+		  <bib:pages> 18-26 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+
+             <bib:entry id="apaydinc">
+		<bib:article>
+		  <bib:author> Apaydin, M. S., D. L. Brutlag, C. Guestrin, D. Hsu, J.-C. Latombe and C. Varma</bib:author>
+		  <bib:title>Stochastic roadmap simulation: an efficient representation and algorithm for analyzing molecular motion
+                  </bib:title>
+		  <bib:journal> Journal of Computational Biology</bib:journal>
+		  <bib:year>2003</bib:year>
+                  <bib:volume> 10</bib:volume>
+		  <bib:pages> 257-281 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+
+             <bib:entry id="apaydind">
+		<bib:article>
+		  <bib:author> Chiang, Tsung-Han, Mehmet Serkan Apaydin, Douglas L. Brutlag, David Hsu and Jean-Claude Latombe</bib:author>
+		  <bib:title>Predicting Experimental Quantities in Protein Folding Kinetics using Stochastic Roadmap Simulation
+                  </bib:title>
+		  <bib:journal> Proceedings of the 2006 ACM International Conference on Research in Computational Molecular Biology (RECOMB)</bib:journal>
+		  <bib:year>2006</bib:year>
+		  <bib:pages> 410-424 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+             <bib:entry id="pandea">
+		<bib:article>
+		  <bib:author> Singhal, N., C. D. Snow and V. S. Pande</bib:author>
+		  <bib:title>Using path sampling to build better Markovian state models: predicting the folding rate and mechanism of a tryptophan zipper beta hairpin
+                  </bib:title>
+		  <bib:journal> Journal of Chemical Physics</bib:journal>
+		  <bib:year>2004</bib:year>
+                  <bib:volume> 121</bib:volume>
+		  <bib:pages> 415-425 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+            <bib:entry id="pandeb">
+		<bib:article>
+		  <bib:author> Singhal, Nina and Vijay S. Pande</bib:author>
+		  <bib:title>Error analysis and efficient sampling in Markovian state models for molecular dynamics
+                  </bib:title>
+		  <bib:journal> Journal of Chemical Physics</bib:journal>
+		  <bib:year>2005</bib:year>
+                  <bib:volume> 123</bib:volume>
+		  <bib:pages> 204909 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+            <bib:entry id="simeon">
+		<bib:article>
+		  <bib:author> Cortes, J, T. Simeon, V. Ruiz de Angulo, D. Guieysse, M. Remauld-Simeon and V. Tran</bib:author>
+		  <bib:title>A Path Planning Approach for Computing Large-Amplitude Motions of Flexible Molecules
+                  </bib:title>
+		  <bib:journal> Bioinformatics </bib:journal>
+		  <bib:year>2005</bib:year>
+                  <bib:volume> 21</bib:volume>
+		  <bib:pages> i116-i125 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+            <bib:entry id="latombesingh">
+		<bib:article>
+		  <bib:author> Singh, A.P., Latombe J.C., and Brutlag, D.L.</bib:author>
+		  <bib:title>A motion planning approach to flexible ligand binding
+                  </bib:title>
+		  <bib:journal>  Proceedings of the International Conference on Intelligent Systems for Molecular Biology</bib:journal>
+		  <bib:year>1999</bib:year>
+		  <bib:pages> 252-261 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+            <bib:entry id="jacobs">
+		<bib:article>
+		  <bib:author> Jacobs, D.J. and Thorpe, M.F.</bib:author>
+		  <bib:title>Generic Rigidity Percolation: The Pebble Game
+                  </bib:title>
+		  <bib:journal>   Physical Review Letters</bib:journal>
+		  <bib:year>1995</bib:year>
+		  <bib:pages> 4051–4054 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+            </bib:file>
+
+</document>

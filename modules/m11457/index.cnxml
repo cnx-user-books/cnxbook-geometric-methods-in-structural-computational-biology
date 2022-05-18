@@ -1,0 +1,196 @@
+<document xmlns="http://cnx.rice.edu/cnxml" xmlns:m="http://www.w3.org/1998/Math/MathML" xmlns:md="http://cnx.rice.edu/mdml" xmlns:bib="http://bibtexml.sf.net/">
+  <title>Robotic Path Planning and Protein Modeling</title>
+  <metadata><md:content-id>undefined</md:content-id><md:title/><md:uuid>2eefe914-bc29-44b6-987b-e3a2e61a37cc</md:uuid>
+</metadata>
+  <content>
+    <para id="topicsListParagraph"><list id="topicsList"><title> Topics in this Module </title>
+   <item> <link target-id="ProteinsAsManipulators"> Proteins as Robotic Manipulators </link> </item>
+<item><link target-id="PathPlanning">Robotic Path Planning</link></item>
+<item><link target-id="samplingbased">Sampling-Based Planners for Proteins</link></item></list></para>   
+
+
+   <section id="ProteinsAsManipulators">
+   <title> Proteins as Robotic Manipulators </title>
+   <para id="ProteinsAsManipulators1">In the modules on <link document="m11621">protein kinematics</link> and <link document="m11613">inverse kinematics</link>, it was shown that, structurally and kinematically, proteins are very similar to a class of <term>robotic manipulators</term> consisting of arms connected by revolute joints.  Because of this analogy, in the late 1990s, some robotics researchers began to speculate that methods developed for use with robots might also be applicable to the study of proteins.  For the remainder of this module, the analogy between robots and proteins will be explored, and then a class of robotics algorithms, called path planners, that will be adapted in a later module to use with proteins, will be introduced.</para><para id="element-307">Recall that a protein is a chain of amino acid residues.  Each residue contributes two rotatable dihedral angles, designated φ and ψ, to the main chain of the protein, and may additionally have a side chain with up to five rotatable dihedral angles.  Under the <term>rigid geometry</term> simplification, these rotatable dihedral angles are the only degrees of freedom available to the protein.
+<figure id="dihedrals_illustration"><title> A Dihedral Angle </title>
+   <media id="idp12246544" alt=""><image src="../../media/dihedral.png" mime-type="image/png" height="250"/></media>
+   <caption> <m:math> <m:msub> <m:ci>π</m:ci> <m:ci> 1 </m:ci> </m:msub>
+	     </m:math> is the plane uniquely defined by the first three atoms
+               <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 2 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>,    
+           <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>,    and <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:ci> i </m:ci>
+	      </m:msub>
+	  </m:math>. Similarly, <m:math> <m:msub> <m:ci>π</m:ci> <m:ci> 2 </m:ci> </m:msub> </m:math> is the plane uniquely defined by the last three atoms <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>,    and <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:ci> i </m:ci>
+	      </m:msub>
+	  </m:math>, and 
+          <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:plus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>.  The dihedral angle, θ, is defined as the smallest angle 
+   between these two planes. You can read more about the <link url="http://mathworld.wolfram.com/Plane.html"> angle between two intersecting planes </link>.
+   </caption>
+   </figure></para><para id="element-65">If we replace each bond by a rigid bar and each rotatable dihedral by a revolute joint, we can build a robotic linkage kinematically equivalent to a protein under rigid geometry.</para>  
+   </section>
+
+
+<section id="PathPlanning">
+<title>Robotic Path Planning</title>
+<section id="CSpaceSection">
+<title>Background</title>
+<para id="PathPlanningTermsPara"><list id="PathPlanningTerms"><title>Terms from robotic path planning</title>
+<item><term>Work space</term>: The work space is the geometric space in which a robot operates.  It consists of obstacles and empty space that may be occupied by the robot.</item>
+<item><term>Configuration</term>:  A configuration of the robot is a full description of the robot's state, including its position, orientation, and the states of any internal degrees of freedom (such as revolute joint angles).</item>
+<item><term>Collision</term>:  A configuration is said to be in collision if any part of the robot overlaps with either another part of the robot or with a work space obstacle.</item>
+<item><term>Free</term>:  A configuration is said to be free if it is not in collision.</item>
+<item><term>Configuration space (C-space)</term>:  The space of all configurations of the robot, annotated by whether the robot is in collision or free at each configuration.</item>
+<item><term>Free space</term>:  The space of all free configurations.</item>
+</list></para><para id="element-137"><figure id="twodrobotworkspace"><title> Work Space, Two-Dimensional Disc Robot </title>
+   <media id="idp12851248" alt=""><image src="../../media/2drobot.jpg" mime-type="image/jpeg" height="400"/></media>
+   <caption>The work space for a simple robot.  The robot is a two dimensional disc.  Configurations are therefore (x,y) pairs.  If the robot were not circular, an orientational degree of freedom would also need to be specified.
+   </caption>
+   </figure>
+
+<figure id="twodrobotconfigspace"><title> Configuration Space, Two-Dimensional Disc Robot </title>
+   <media id="idp7941632" alt=""><image src="../../media/2drobotconfigspace.jpg" mime-type="image/jpeg" height="400"/></media>
+   <caption>The configuration space corresponding to the above work space.  Each point now corresponds to a configuration of the robot, rather than a real point in space.  To see how it was constructed, choose any point on the robot as a reference.  Now imagine the curves swept out by that point as the robot slides along the surface of the obstacles and along the border of the work space.  Every configuration closer to the obstacles than this curve is in collision, and every configuration farther than the curve is free.
+   </caption>
+   </figure></para><para id="element-326">In the above figures, the configuration space is two dimensional because the robot has two degrees of freedom.  If the heading of the robot mattered (i.e., if the robot were not circular), then a configuration would consist of a position and an orientation.  The configuration space would therefore be three dimensional.  If the robot had a rotatable joint, this would add another degree of freedom and another dimension to the C-space.</para>
+</section>
+
+<section id="PathPlanningProblem">
+<title>The Path Planning Problem</title>
+<para id="PathPlanningProblem1">The robotic path planning problem is, given a robot, a work space, and starting and goal configurations for the robot in the work space, find a collision-free path for the robot from the starting configuration to the goal, if one exists.  Otherwise determine that no such path exists.  An extensive introduction to the path planning problem and existing solutions may be found in <cite target-id="choset"/>.</para><para id="element-715">Early approaches to path planning included:
+<list id="EarlyApproaches">
+<item>Construction of visibility graphs between the vertices of C-space obstacles.</item>
+<item>Decomposition of the C-space, effectively into subproblems.</item>
+<item>Potential field methods, in which the goal exerts an attractive force on the robot, and the obstacles exert repulsive forces.</item>
+</list>
+
+The first two methods scale poorly with the dimensionality of the C-space, since the complexity of the C-space affects their run time.  Potential fields are subject to local minima.  A robot moving down the potential gradient might get stuck in a potential well before it reaches the global potential minimum at the goal.</para>
+</section>
+
+<section id="samplingbased">
+<title>Sampling-Based Path Planning</title>
+<para id="element-807">One solution to the scalability problem was to find methods whose run time does not depend on the dimensionality of the C-space, but on some other factor.  This led to <term>sampling-based</term> path planning.  Rather than making some explicit analysis of the whole C-space, sampling based planners built their representation of C-space by sampling random configurations and using a fast collision checker to determine whether they are in collision.</para><para id="element-239">The basis of many modern sampling-based planners is the <term>Probabilistic Roadmap Method (PRM)</term> <cite target-id="kavraki"/>.  Although the implementation details can become complicated, the basic algorithmic framework is quite straightforward and easy to understand.
+
+<list id="PRMAlgorithm"><title>The PRM algorithmic framework:</title>
+<item>Randomly sample a large number of points in C-space, keeping any that are not in collision.  This creates a point set in C-space.</item>
+<item>Using a <term>local planner</term>, attempt to connect pairs of samples that are relatively close to each other by thoroughly sampling and collision checking configurations between them.  This creates a graph data structure called a roadmap.</item>
+<item>To query the roadmap, first attempt to connect the start and goal configurations to the existing graph.  If that is successful, search the graph for a path from start to goal using any standard graph search method (often A*).</item>
+</list>
+
+PRM implementations vary in terms of how the points are sampled--remember that random does not mean uniformly at random--as well as in how the local planner attempts to connect nearby configurations.</para><para id="element-663"><figure id="PRM1"><title> Configuration Space for Path Planning </title>
+   <media id="idp12903584" alt=""><image src="../../media/obstacle_scene.JPG" mime-type="image/jpeg"/></media>
+   <caption>A configuration space in which we wish to build a Probabilistic Roadmap.
+   </caption>
+   </figure>
+
+<figure id="PRM2"><title> Sampling </title>
+   <media id="idp11893376" alt=""><image src="../../media/samples.JPG" mime-type="image/jpeg"/></media>
+   <caption>Random points in the configuration space are tested for collision with obstacles.  Collision-free points are kept.
+   </caption>
+   </figure>
+
+
+<figure id="PRM3"><title> Connection </title>
+   <media id="idp8598464" alt=""><image src="../../media/roadmap.JPG" mime-type="image/jpeg"/></media>
+   <caption>The roadmap is constructed by connecting nearby samples.  Many collision checks are made along each edge to ensure that the connection is legitimate.
+   </caption>
+   </figure>
+
+<figure id="PRM4"><title> Query </title>
+   <media id="idp6082208" alt=""><image src="../../media/query.JPG" mime-type="image/jpeg"/></media>
+   <caption>The start and goal configurations are connected to their nearest neighbors in the roadmap.  A graph search is then made to find the shortest path in the roadmap from start to goal.
+   </caption>
+   </figure></para><para id="element-502">Unlike some slower methods, there is no guarantee that PRM will find a path if one exists.  A different kind of guarantee is possible, however.  While not complete, PRM is <term>probabilistically complete</term>.  As the number of samples increases, the probability of the planner finding a path if one exists approaches 1.  For many real-world path-planning problems, the method is very fast and reliable in practice.</para><para id="element-464">PRMS are not the only kind of robotic path planner.  Building a roadmap is a time-consuming process.  The advantage of doing so is that once the roadmap is built, and assuming that the obstacles are not allowed to move, it can be used to rapidly plan an arbitrary number of paths.  If the goal is only to find a single path, however, much of the effort of building the roadmap is wasted.  It would be preferable to use a method that is concerned with connecting the start and goal configurations rather than covering the configuration space.</para><para id="element-522">Such a class of sampling-based planners exist, and they are called <emphasis>tree-based</emphasis> or <emphasis>single-query</emphasis> planners.  All of these planners take the same overall approach:  They begin with the start configuration for the path planning query, and build a tree data structure of samples growing away from it, with a bias toward the goal configuration.  </para><para id="element-537"><figure id="SingleQueryImage"><title> Operation of a Tree-Based Planner</title>
+   <media id="idp12953264" alt=""><image src="../../media/rrt.jpg" mime-type="image/jpeg"/></media>
+   <caption>Tree-based planners start at a point and grow outwards, covering the configuration space more and more densely as time goes on.
+   </caption>
+   </figure>
+
+Single-query planners come in three basic types, each of which has been subject to numerous variations and enhancements since its original development:
+
+<list id="TypesOfTreePlanners"><title>Types of Single-Query Planners</title>
+<item><emphasis>Expansive Spaces Trees (ESTs)</emphasis>: At each step of building an EST, a node of the tree is selected for expansion.  Nodes in more sparsely sampled parts of the configuration space are more likely to be chosen, and some bias may also be present for nodes closer to the goal.  A number of samples are made in the vicinity of this node, and those that can be connected to it are added to the tree.</item>
+
+<item><emphasis>Rapidly-exploring Random Trees (RRTs)</emphasis>:  At each step of RRT-building, a random point is selected in the configuration space, with some bias toward the goal configuration.  The nearest node in the tree is found, and a path is created from it toward the random point, either for a set distance or until an obstacle is encountered, whichever comes first.  The final collision-free configuration on this path is added to the tree. </item>
+
+<item><emphasis>Path-Directed Subdivision Trees (PDSTs)</emphasis>:  PDSTs store edges and branch points as their primitive data rather than nodes.  It also maintains a cell decomposition of the configuration space and assigns paths to cells.  At each step of building the tree, an edge is deterministically selected based on an estimate of how well-sampled its surroundings are (using the cell decomposition), and a random point on the edge is selected for branching.  The old edge is divided in two, a new edge is added at the branch point, and the cell decomposition is updated.  Thus, the tree expands outward from its starting point, steered toward less well-sampled regions by the cell decomposition.  PDSTs are well-suited for robotics problems with realistic and complex physics.</item>
+</list></para>
+</section>
+</section>
+<section id="SamplingBasedProteins">
+<title>Sampling Based Planners for Proteins</title>
+<para id="SamplingBasedProteinsPara1">With adjustments, one can apply sampling-based robotic path planning to study protein motion.  First and foremost, the configuration space, which sorts conveniently into occupied and free configurations, must be replaced by the more complicated molecular <term>conformation space</term>.  Each conformation of a molecule has a <term>free energy</term>, which depends on chemical and physical interactions between its component atoms and those of any other molecules (such as solvent molecules) that may be nearby.  This free energy is related to the probability of a protein being in a conformation.  Thus, instead of dealing with the binary problem of colliding and free conformations, the conformation space is one of continuously varying probabilities.  This problem may be simplified by the use of energy cutoffs, but it is difficult to decide, for any given problem, what energy is so high that a conformation is effectively in collision. Free energy and how it is incorporated into the study of molecular motion is discussed in more detail in <link document="m11449">Motion Planning for Proteins: Biophysics and Applications</link>.</para>
+
+</section><para id="element-68"><title>Recommended Reading</title>
+
+Choset, Howie, Kevin M. Lynch, Seth Hutchinson, George Kantor, Wolfram Burgard, Lydia E. Kavraki and Sebastian Thrun.  Principles of Robot Motion: Theory, Algorithms, and Implementations.  Cambridge, MA: MIT Press, 2005.  Chapter 1 for introduction to robotics and analogy between robots and biomolecules.  Chapter 7 for a summary of sampling-based planners.</para>
+  </content>
+<bib:file>
+
+   <bib:entry id="choset">
+      <bib:book>
+      <bib:author> Choset, Howie, Kevin M. Lynch, Seth Hutchinson, George Kantor, Wolfram Burgard, Lydia E. Kavraki and Sebastian Thrun </bib:author>  
+	<bib:title> Principles of Robot Motion: Theory, Algorithms, and Implementations</bib:title>   
+        <bib:publisher> MIT Press  </bib:publisher> 
+	<bib:year>  2005</bib:year>  
+      <bib:address>Cambridge, MA</bib:address>
+  
+	</bib:book>
+   </bib:entry>	
+
+
+    <bib:entry id="kavraki">
+    <bib:article>
+     <bib:author>   Kavraki, L.E., Svestka, P., Latombe, J.-C., and Overmars, M.H.  </bib:author>  
+     <bib:title> Probabilistic Roadmaps for Path Planning in High-Dimensional Configuration Spaces </bib:title>   
+     <bib:journal> IEEE Transactions on Robotics and Automation</bib:journal> 
+     <bib:year> 1996</bib:year>    
+     <bib:volume> 12</bib:volume>  
+     <bib:pages> 566-580 </bib:pages>   
+    </bib:article>
+    </bib:entry>	
+
+
+</bib:file>
+
+</document>

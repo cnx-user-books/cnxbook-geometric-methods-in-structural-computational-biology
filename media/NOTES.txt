@@ -1,0 +1,5 @@
+Created PNGs from all JPGs with 'mogrify -format png'
+Created PNGs from all jpgs with 'mogrify -format png'
+index.cnxml:
+  :%s/JPG/png/gc
+  :%s/jpg/png/gc

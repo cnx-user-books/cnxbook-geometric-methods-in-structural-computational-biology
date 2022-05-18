@@ -1,0 +1,452 @@
+<document xmlns="http://cnx.rice.edu/cnxml" xmlns:m="http://www.w3.org/1998/Math/MathML" xmlns:md="http://cnx.rice.edu/mdml" xmlns:bib="http://bibtexml.sf.net/">
+  <title>Molecular Distance Measures</title>
+  <metadata><md:content-id>undefined</md:content-id><md:title/><md:uuid>1d5f91b1-dc0b-44ff-8b4d-8809313588f2</md:uuid>
+</metadata>
+
+  <content>
+ 
+ <para id="element-998"><list id="topicsList"><title> Topics in this Module </title>
+   <item> <link target-id="Intro"> Comparing Molecular Conformations </link> </item>
+   <item> <link target-id="RMSD"> RMSD and lRMSD </link> </item>
+   <item><link target-id="MatrixAlignment">Optimal Alignment for lRMSD Using Rotation Matrices</link></item>
+   <item> <link target-id="lRMSDAlignmentSection"> Optimal Alignment for lRMSD Using Quaternions </link> 
+      <list id="LRMSDTopics">
+        <item><link target-id="QuaternionSection">Introduction to Quaternions</link></item>
+        <item><link target-id="QuaternionRotations">Quaternions and Three-Dimensional Rotations</link></item>
+        <item><link target-id="QuaternionAlignmentSection">Optimal Alignment with Quaternions</link></item>
+      </list>
+   </item>
+   <item><link target-id="IntramolecularDistanceSection">Intramolecular Distance and Related Measures</link></item>
+</list></para>
+
+<section id="Intro">
+  <title> Comparing Molecular Conformations </title>
+  <para id="comparing_shapes_para1">Molecules are not rigid. On the contrary, they are highly flexible objects, capable of changing shape dramatically through the rotation of dihedral angles. We need a measure to express how much a molecule changes going from one conformation to another, or alternatively, how different two conformations are from each other.
+  Each distinct shape of a given molecule is called a <term>conformation</term>.
+  Although one could conceivably compute the volume of the intersection of the
+  alpha shapes for two conformations (see <link document="m11616">Molecular Shapes and Surfaces</link> for an explanation of alpha shapes) to measure the shape change, this is prohibitively computationally expensive.  Simpler measures of distance between conformations have been defined, based on variables such as the Cartesian coordinates for each atom, or the bond and torsion angles within the molecule. When working with Cartesian coordinates, one can represent a molecular conformation as a vector whose components are the Cartesian coordinates of the molecule's atoms. Therefore, a conformation for a molecule with N atoms can be represented as a 3N-dimensional vector of real numbers. </para>
+</section>
+
+<section id="RMSD">
+<title> RMSD and lRMSD</title>
+  <para id="element-589">One of the most widely accepted difference measures for conformations of a molecule is <term>least root mean square deviation (lRMSD)</term>.  To calculate the RMSD of a pair of structures (say x and y), each structure must be represented as a 3N-length (assuming N atoms) vector of coordinates.  The RMSD is the square root of the average of the squared distances between corresponding atoms of x and y.  It is a measure of the average atomic displacement between the two conformations:</para>
+
+<para id="elparagrafo"><media id="idp1163488" alt=""><image src="../../media/rmsd_plain.jpg" mime-type="image/jpeg"/></media></para>
+
+<para id="element-648">However, when molecular conformations are sampled from molecular dynamics or other forms of sampling, it is often the case that the molecule drifts away from the origin and rotates in an arbitrary way. The lRMSD distance aims at compensating for these facts by representing the minimum RMSD over all possible relative positions and orientations of the two conformations under consideration.  Calculating the lRMSD consists of first finding an optimal alignment of the two structures, and then calculating their RMSD. Note that aligning two conformations may require both a translation and rotation. In other words, before computing the RMSD distance, it is necessary to remove the translation of the centroid of both conformations and to perform an "optimal alignment" or "optimal rotation" of them, since these two factors artificially increase the RMSD distance between them.</para><para id="element-559">Finding the optimal rotation to minimize the RMSD between two point sets is a well-studied problem, and several algorithms exist.  The <term>Kabsch Algorithm</term> <cite target-id="kabscha"><cite-title>[1]</cite-title></cite><cite target-id="kabschb"><cite-title>[2]</cite-title></cite>, which is implemented in several molecular modeling packages, solves a matrix equation for the three dimensional rotation matrix corresponding to the optimal rotation.  An alternative approach, discussed in detail after the matrix method, uses a compact representation of rotational transformations called <term>quaternions</term> <cite target-id="horn"><cite-title>[3]</cite-title></cite><cite target-id="coutsias"><cite-title>[4]</cite-title></cite>. Quaternions are currently the preferred representation for global rotation in calculating lRMSD, since they require less numbers to be stored and are easy to re-normalize. In contrast, re-normalization of orthonormal matrices is quite expensive and potentially numerically unstable.  Both quaternions and their application to global alignment of conformations will be presented after the next section.</para>
+</section>
+
+
+<section id="MatrixAlignment">
+<title>Optimal Alignment for lRMSD Using Rotation Matrices </title>
+<para id="gangrita">This section presents a method for computing the optimal rotation
+between 2 datasets as an orthonormal rotation matrix. As stated earlier,
+this approach is slightly more numerically unstable (since guaranteeing
+the orthonormality of a matrix is harder than the unit length of a
+quaternion) and requires taking care of the special case when the resulting
+matrix may not be a proper rotation, as discussed below.
+
+</para><para id="element-886">As stated earlier, the optimal alignment requires both a translation and a rotation. The translational part of the alignment is easy to calculate. It can be proven that the optimal alignment is obtained by translating one set so that its centroid coincides with the other set's centroid (see section 2-C of <cite resource="horn"><cite-title>[3]</cite-title></cite> for proof). The centroid of a point set a is simply the average position of all its points:
+
+<figure id="CentroidFigure"><title> Centroid of a Point Set </title>
+   <media id="idm1871600" alt=""><image src="../../media/centroid.png" mime-type="image/png"/></media>
+   <caption> The centroid of a point set is the average position over all the points. </caption>
+</figure>
+
+We can then redefine each point in two sets A and B as a deviation from the centroid:
+
+<figure id="CenteredPoints"><title> Redefining Point Sets in Terms of Centroids </title>
+   <media id="idm2818240" alt=""><image src="../../media/centroid_offset.png" mime-type="image/png"/></media>
+   <caption> Each point is now expressed as a deviation from its set's centroid. </caption>
+</figure>
+
+Given this notation relative to the centroid, we can explicitly set the centroids to be equal and proceed with the rotational part of the alignment.
+</para><para id="element-601">One of the first references to the solution of this problem in matrix form is from Kabsch <cite target-id="kabscha"><cite-title>[1]</cite-title></cite><cite target-id="kabschb"><cite-title>[2]</cite-title></cite>. The Kabsch method uses <link url="http://en.wikipedia.org/wiki/Lagrange_multipliers">Lagrange multipliers</link> to solve a minimization problem to find the optimal rotation. Here, we present a slightly more intuitive method based on matrix algebra and properties, that achieves the same result. This formulation can be found in <cite target-id="coutsias"><cite-title>[4]</cite-title></cite> and <cite target-id="golub"><cite-title>[5]</cite-title></cite>. Imagine we wish to align two conformations composed of N atoms each, whose Cartesian coordinates are given by the vectors <m:math><m:ci>x</m:ci></m:math> and <m:math><m:ci>y</m:ci></m:math>. The main idea behind this approach is to find a 3x3 orthonormal matrix <m:math><m:ci>U</m:ci></m:math> such that the application of <m:math><m:ci>U</m:ci></m:math> to the atom positions of one of the data vectors, <m:math><m:ci>x</m:ci></m:math>, aligns it as best as possible with the other data vector, <m:math><m:ci>y</m:ci></m:math>, in the sense that the quantity to minimize is the distance <m:math><m:ci>d(Ux,y)</m:ci></m:math>, where <m:math><m:ci>x</m:ci></m:math> and <m:math><m:ci>y</m:ci></m:math> are assumed to be <term>centered</term>, that is, both their centroids coincide at the origin (centering both conformations is the first step). Mathematically, this problem can be stated as the <term>minimization</term> of the following quantity:
+</para><para id="element-264"><media id="idp6468624" alt=""><image src="../../media/matrix_method1.jpg" mime-type="image/jpeg"/></media></para><para id="element-809">When E is a minimum, the square root of its value becomes the least RMSD (lRMSD) between <m:math><m:ci>x</m:ci></m:math> and <m:math><m:ci>y</m:ci></m:math>. Being an orthonormal rotation matrix, <m:math><m:ci>U</m:ci></m:math> needs to satisfy the orthonormality property 
+       <m:math>
+            <m:apply>
+            <m:eq/> 
+               <m:apply>
+                <m:times/>
+                <m:ci>U</m:ci>
+   	        <m:msup>
+   	         <m:ci>U</m:ci>
+   		<m:ci>T</m:ci>
+   	        </m:msup>
+               </m:apply>
+              <m:ci>I</m:ci>
+            </m:apply>
+     </m:math>
+, where <m:math><m:ci>I</m:ci></m:math> is the identity matrix. The orthonormality contraint ensures that the rows and columns are mutually orthogonal, and that their length (as vectors) is one. Any orthonormal matrix represents a rigid orientation (transformation) in space. The only problem with this approach as is, is that all orthonormal matrices encode a rigid transformation, but if the rows/columns of the matrix do not constitute a <term>right handed system</term>, then the rotation is said to be <term>improper</term>. In an improper rotation, one of the three directions may be "mirrored". Fortunately, this case can be detected easily by computing the determinant of the matrix <m:math><m:ci>U</m:ci></m:math>, and if it is negative, correcting the matrix. Denoting <m:math><m:apply><m:times/><m:ci>U</m:ci><m:ci>x</m:ci></m:apply></m:math> as <m:math><m:ci>x'</m:ci></m:math>, and moving the constant factor N to the left, the formula for the error becomes:</para><para id="element-561"><media id="idm10744480" alt=""><image src="../../media/matrix_method2.jpg" mime-type="image/jpeg"/></media></para><para id="element-501">An alternative way to represent the two point sets, rather than a one-dimensional vector or as separate atom coordinates, is using two 3xN matrices (N atoms, 3 coordinates for each). Using this scheme, <m:math><m:ci>x</m:ci></m:math> is represented by the matrix <m:math><m:ci>X</m:ci></m:math> and <m:math><m:ci>y</m:ci></m:math> is represented by the matrix <m:math><m:ci>Y</m:ci></m:math>. Note that column <m:math><m:apply><m:leq/><m:apply><m:leq/><m:mn>1</m:mn><m:ci>i</m:ci></m:apply><m:ci>N</m:ci></m:apply></m:math> in these matrices stands for point (atom) <m:math><m:msub><m:ci>x</m:ci><m:ci>i</m:ci></m:msub></m:math> and <m:math><m:msub><m:ci>y</m:ci><m:ci>i</m:ci></m:msub></m:math>, respectively. Using this new representation, we can write:</para><para id="element-745"><media id="idm758784" alt=""><image src="../../media/matrix_method3.jpg" mime-type="image/jpeg"/></media></para><para id="element-109">where <m:math><m:apply><m:eq/><m:ci>X'</m:ci><m:apply><m:times/><m:ci>U</m:ci><m:ci>X</m:ci></m:apply></m:apply></m:math> and <m:math><m:ci>Tr(A)</m:ci></m:math> stands for the <link url="http://en.wikipedia.org/wiki/Trace_%28linear_algebra%29">trace</link> of matrix A, the sum of its diagonal elements. It is easy to see that that the trace of the matrix to the right amounts precisely to the sum on the left (simply carrying out the multiplication of the first row/column should convince the reader). The right-hand side of the equation can be expanded into:</para><para id="element-39"><media id="idp3872768" alt=""><image src="../../media/matrix_method4.jpg" mime-type="image/jpeg"/></media></para><para id="element-173">Which follows from the properties of the trace operator, namely: <m:math><m:ci>Tr(A+B)=Tr(A)+Tr(B), Tr(AB)=Tr(BA)</m:ci></m:math>, <m:math><m:ci>Tr(</m:ci></m:math><m:math><m:msup><m:ci>A</m:ci><m:ci>T</m:ci></m:msup></m:math><m:math><m:ci>)=Tr(A)</m:ci></m:math>, and <m:math><m:ci>Tr(kA)=kTr(A)</m:ci></m:math>. Furthermore, the first two terms in the expansion above represent the sum of the squares of the components <m:math><m:msub><m:ci>x</m:ci><m:ci>i</m:ci></m:msub></m:math> and <m:math><m:msub><m:ci>y</m:ci><m:ci>i</m:ci></m:msub></m:math>, so it can be rewritten as:</para><para id="element-678"><media id="idp3590112" alt=""><image src="../../media/matrix_method5.jpg" mime-type="image/jpeg"/></media></para><para id="element-898">Note that the <m:math><m:ci>x</m:ci></m:math> components do not need to be primed (i.e., <m:math><m:ci>x'</m:ci></m:math>) since the rotation <m:math><m:ci>U</m:ci></m:math> around the origin does not change the length of <m:math><m:msub><m:ci>x</m:ci><m:ci>i</m:ci></m:msub></m:math>. Note that the summation above does not depend on <m:math><m:ci>U</m:ci></m:math>, so <term>minimizing</term> E is equivalent to <term>maximizing</term> <m:math><m:ci>Tr(</m:ci></m:math><m:math><m:apply><m:times/><m:msup><m:ci>Y</m:ci><m:ci>T</m:ci></m:msup><m:ci>X'</m:ci></m:apply></m:math><m:math><m:ci>)</m:ci></m:math>. For this reason, the rest of the discussion focuses on finding a proper rotation matrix <m:math><m:ci>U</m:ci></m:math> that maximizes <m:math><m:ci>Tr(</m:ci></m:math><m:math><m:apply><m:times/><m:msup><m:ci>Y</m:ci><m:ci>T</m:ci></m:msup><m:ci>X'</m:ci></m:apply></m:math><m:math><m:ci>)</m:ci></m:math>. Remembering that <m:math><m:apply><m:eq/><m:ci>X'</m:ci><m:apply><m:times/><m:ci>U</m:ci><m:ci>X</m:ci></m:apply></m:apply></m:math>, the quantity to maximize is then <m:math><m:ci>Tr(</m:ci></m:math><m:math><m:apply><m:times/><m:apply><m:times/><m:msup><m:ci>Y</m:ci><m:ci>T</m:ci></m:msup><m:ci>U</m:ci></m:apply><m:ci>X</m:ci></m:apply></m:math><m:math><m:ci>)</m:ci></m:math>. From the property of the trace operator, this is equivalent to <m:math><m:ci>Tr(</m:ci></m:math><m:math><m:apply><m:times/><m:apply><m:times/><m:ci>X</m:ci><m:msup><m:ci>Y</m:ci><m:ci>T</m:ci></m:msup></m:apply><m:ci>U</m:ci></m:apply></m:math><m:math><m:ci>)</m:ci></m:math>. Since <m:math><m:apply><m:times/><m:ci>X</m:ci><m:msup><m:ci>Y</m:ci><m:ci>T</m:ci></m:msup></m:apply></m:math> is a square 3x3 matrix, it can be decomposed through the <link url="http://en.wikipedia.org/wiki/Singular_value_decomposition">Singular Value Decomposition</link> technique (SVD) into  <m:math><m:apply><m:eq/><m:apply><m:times/><m:ci>X</m:ci><m:msup><m:ci>Y</m:ci><m:ci>T</m:ci></m:msup></m:apply><m:msup><m:ci>VSW</m:ci><m:ci>T</m:ci></m:msup></m:apply></m:math>, where <m:math><m:ci>V</m:ci></m:math> and <m:math><m:msup><m:ci>W</m:ci><m:ci>T</m:ci></m:msup></m:math> are the matrices of left and right eigenvectors (which are orthonormal matrices), respectively, and <m:math><m:ci>S</m:ci></m:math> is a diagonal 3x3 matrix containing the eigenvalues <m:math><m:msub><m:ci>s</m:ci><m:mn>1</m:mn></m:msub></m:math>, <m:math><m:msub><m:ci>s</m:ci><m:mn>2</m:mn></m:msub></m:math>, <m:math><m:msub><m:ci>s</m:ci><m:mn>3</m:mn></m:msub></m:math> in decreasing order. Again from the properties of the trace operator, we obtain that:</para><para id="element-525"><media id="idp4155552" alt=""><image src="../../media/matrix_method6.jpg" mime-type="image/jpeg"/></media></para><para id="element-80">If we introduce the 3x3 matrix <m:math><m:ci>T</m:ci></m:math> as the product 
+<m:math>
+ <m:apply>
+ <m:eq/>
+  <m:ci>T</m:ci>
+  <m:apply>
+  <m:times/>
+   <m:msup><m:ci>W</m:ci><m:ci>T</m:ci></m:msup>
+   <m:ci>UV</m:ci>
+  </m:apply>
+ </m:apply>
+</m:math>
+, we can rewrite the above expression as:</para><para id="element-311"><media id="idm9505776" alt=""><image src="../../media/matrix_method7.jpg" mime-type="image/jpeg"/></media></para><para id="element-249">Since <m:math><m:ci>T</m:ci></m:math> is the product of orthonormal matrices, it is itself an orthonormal matrix and <m:math><m:ci>det(T)=+/-1</m:ci></m:math>. This means that the absolute value of each element of this matrix is no more than one, from where the last equality follows. It is obvious that the maximum value of the left hand side of the equation is reached when the diagonal elements of <m:math><m:ci>T</m:ci></m:math> are equal to 1, and since it is an orthonormal matrix, all other elements must be zero. This results in <m:math><m:apply><m:eq/><m:ci>T</m:ci><m:ci>I</m:ci></m:apply></m:math>. Moreover, since <m:math>
+ <m:apply>
+ <m:eq/>
+  <m:ci>T</m:ci>
+  <m:apply>
+  <m:times/>
+   <m:msup><m:ci>W</m:ci><m:ci>T</m:ci></m:msup>
+   <m:ci>UV</m:ci>
+  </m:apply>
+ </m:apply>
+</m:math>
+, we can write that 
+ <m:math>
+ <m:apply>
+ <m:eq/>
+  <m:apply>
+  <m:times/>
+   <m:msup><m:ci>W</m:ci><m:ci>T</m:ci></m:msup>
+   <m:ci>UV</m:ci>
+  </m:apply>
+  <m:ci>I</m:ci>
+ </m:apply>
+</m:math>, and because <m:math><m:ci>W</m:ci></m:math> and <m:math><m:ci>V</m:ci></m:math> are orthonormal,
+ <m:math>
+ <m:apply>
+ <m:eq/>
+  <m:apply>
+  <m:times/>
+   <m:ci>W</m:ci>
+   <m:msup><m:ci>W</m:ci><m:ci>T</m:ci></m:msup>
+  </m:apply>
+   <m:ci>I</m:ci>
+  </m:apply>
+</m:math>
+and
+ <m:math>
+ <m:apply>
+ <m:eq/>
+  <m:apply>
+  <m:times/>
+   <m:ci>V</m:ci>
+   <m:msup><m:ci>V</m:ci><m:ci>T</m:ci></m:msup>
+  </m:apply>
+   <m:ci>I</m:ci>
+  </m:apply>
+</m:math>. Multiplying  <m:math>
+  <m:apply>
+  <m:times/>
+   <m:msup><m:ci>W</m:ci><m:ci>T</m:ci></m:msup>
+   <m:ci>UV</m:ci>
+  </m:apply>
+</m:math> by <m:math><m:ci>W</m:ci></m:math> to the left and <m:math><m:msup><m:ci>V</m:ci><m:ci>T</m:ci></m:msup></m:math> to the right yields a solution for <m:math><m:ci>U</m:ci></m:math>:</para><para id="element-658"><media id="idp3385888" alt=""><image src="../../media/matrix_method8.jpg" mime-type="image/jpeg"/></media></para><para id="element-769">Where <m:math><m:ci>V</m:ci></m:math> and <m:math><m:msup><m:ci>W</m:ci><m:ci>T</m:ci></m:msup></m:math> are the matrices of left and right eigenvectors, respectively, of the covariance matrix 
+<m:math>
+ <m:apply>
+ <m:eq/>
+  <m:ci>C</m:ci>
+  <m:apply>
+   <m:times/>
+   <m:ci>X</m:ci>
+   <m:msup><m:ci>Y</m:ci><m:ci>T</m:ci></m:msup>
+  </m:apply>
+ </m:apply>
+</m:math>. This formula ensures that <m:math><m:ci>U</m:ci></m:math> is orthonormal (the reader should carry out the high-level matrix multiplication and verify this fact). </para><para id="element-852">The only remaining detail to take care of is to make sure that <m:math><m:ci>U</m:ci></m:math> is a <term>proper</term> rotation, as discussed before. It could indeed happen that <m:math><m:ci>det(U)=-1</m:ci></m:math> if its rows/columns do not make up a right-handed system. When this happens, we need to compromise between two goals: maximizing <m:math><m:ci>Tr(</m:ci></m:math><m:math><m:apply><m:times/><m:msup><m:ci>Y</m:ci><m:ci>T</m:ci></m:msup><m:ci>X'</m:ci></m:apply></m:math><m:math><m:ci>)</m:ci></m:math> and respecting the constraint that <m:math><m:ci>det(U)=+1</m:ci></m:math>. Therefore, we need to settle for the second largest value of <m:math><m:ci>Tr(</m:ci></m:math><m:math><m:apply><m:times/><m:msup><m:ci>Y</m:ci><m:ci>T</m:ci></m:msup><m:ci>X'</m:ci></m:apply></m:math><m:math><m:ci>)</m:ci></m:math>. It is easy to see what the second largest value is; since:</para><para id="element-972"><media id="idm2363360" alt=""><image src="../../media/matrix_method9.jpg" mime-type="image/jpeg"/></media></para><para id="element-922">then the second largest value occurs when <m:math><m:apply><m:eq/><m:msub><m:ci>T</m:ci><m:mn>11</m:mn></m:msub><m:msub><m:ci>T</m:ci><m:mn>22</m:mn></m:msub><m:mn>+1</m:mn></m:apply></m:math> and <m:math><m:apply><m:eq/><m:msub><m:ci>T</m:ci><m:mn>33</m:mn></m:msub><m:mn>-1</m:mn></m:apply></m:math>. Now, we have that <m:math><m:ci>T</m:ci></m:math> cannot be the identity matrix as before, but instead it has the lower-right corner set to -1. Now we finally have a unified way to represent the solution. If <m:math><m:ci>det(C)&gt;0</m:ci></m:math>, <m:math><m:ci>T</m:ci></m:math> is the identity; otherwise, it has a -1 as its last element. Finally, these facts can be expressed in a single formula for the optimal rotation <m:math><m:ci>U</m:ci></m:math> by stating:</para><para id="element-763"><media id="idp2014448" alt=""><image src="../../media/matrix_method10.jpg" mime-type="image/jpeg"/></media></para><para id="element-890">where <m:math><m:apply><m:eq/><m:ci>d</m:ci><m:ci>sign(det(C))</m:ci></m:apply></m:math>. In the light of the preceding derivation, all the facts that have been presented as a proof can be succinctly put as an algorithm for computing the optimal rotation to align two data sets <m:math><m:ci>x</m:ci></m:math> and <m:math><m:ci>y</m:ci></m:math>:</para><para id="element-48"><list id="matrix_rotation" list-type="enumerated"><title>Optimal rotation</title>
+  <item>Build the 3xN matrices <m:math><m:ci>X</m:ci></m:math> and <m:math><m:ci>Y</m:ci></m:math> containing, for the sets <m:math><m:ci>x</m:ci></m:math> and <m:math><m:ci>y</m:ci></m:math> respectively, the coordinates for each of the N atoms after centering the atoms by subtracting the centroids.</item>
+  <item>Compute the covariance matrix <m:math><m:apply><m:eq/><m:ci>C</m:ci><m:apply><m:times/><m:ci>X</m:ci><m:msup><m:ci>Y</m:ci><m:ci>T</m:ci></m:msup></m:apply></m:apply></m:math></item>
+  <item>Compute the SVD (Singular Value Decomposition) of <m:math><m:apply><m:eq/><m:ci>C</m:ci><m:apply><m:times/><m:ci>V</m:ci><m:ci>S</m:ci><m:msup><m:ci>W</m:ci><m:ci>T</m:ci></m:msup></m:apply></m:apply></m:math></item> 
+  <item>Compute <m:math><m:apply><m:eq/><m:ci>d</m:ci><m:ci>sign(det(C))</m:ci></m:apply></m:math></item>
+  <item>Compute the optimal rotation <m:math><m:ci>U</m:ci></m:math> as </item></list> 
+</para><para id="element-1"><media id="idm9982928" alt=""><image src="../../media/matrix_method10.jpg" mime-type="image/jpeg"/></media></para>
+</section>
+
+
+
+<section id="lRMSDAlignmentSection">
+<title>Optimal Alignment for lRMSD Using Quaternions </title>
+
+<para id="element-492">Another way of solving the optimal rotation for the purposes of computing the lRMSD between two conformations is to use <term>quaternions</term>. These provide a very compact way of representing rotations (only 4 numbers as compared to 9 or 16 for a rotation matrix) and are extremely easy to normalize after performing operations on them. Next, a general introduction to quaternions is given, and then they will be used to compute the optimal rotation between two point sets.</para><section id="QuaternionSection">
+<title>Introduction to Quaternions</title>
+<para id="QuaternionPara1">Quaternions are an extension of complex numbers.  Recall that complex numbers are numbers of the form a + bi, where a and b are real numbers and i is the canonical imaginary number, equal to the square root of -1.  Quaternions add two more imaginary numbers, j and k.  These numbers are related by the set of equalities in the following figure:
+   <figure id="QuaternionLaws"><title> Equation Relating the Imaginary Elements i, j and k </title>
+   <media id="idm1273296" alt=""><image src="../../media/quaternion_law.png" mime-type="image/png"/></media>
+   <caption> Properties of quaternion arithmetic follow directly from these equalities.</caption>
+   </figure>
+
+These equalities give rise to some unusual properties, especially with respect to multiplication.
+   <figure id="QuaternionMultiplicationTable"><title> Multiplication Table for the Imaginary Elements i, j and k </title>
+   <media id="idm1290464" alt=""><image src="../../media/quaternion_mult.png" mime-type="image/png"/></media>
+   <caption> Note that multiplication of i, j, and k is <term>anti-commutative</term>.</caption></figure></para><para id="element-7">Given this definition of i, j, and k, we can now define a quaternion.
+
+   <figure id="QuaternionDef"><title> Definition of a Quaternion </title>
+   <media id="idm9135584" alt=""><image src="../../media/quaternion_def.png" mime-type="image/png"/></media>
+   <caption> A quaternion is a number of the above form, where a, b, c, and d are real-valued scalars and i, j, and k are imaginary numbers as defined above.</caption></figure>
+
+Based on the definitions of i, j and k, we can also derive rules for addition and multiplication of quaternions.  Assume we have two quaternions, p and q, defined as follows:
+
+   <figure id="PandQDefined"><title> Quaternions p and q</title>
+   <media id="idp2639472" alt=""><image src="../../media/p_q_definition.png" mime-type="image/png"/></media>
+   <caption>Definition of quaternions p and q for later use.</caption>
+</figure>
+
+Addition of p and q is fairly intuitive:
+
+   <figure id="QuaternionAddition"><title> Addition of Quaternions p and q</title>
+   <media id="idp654432" alt=""><image src="../../media/quaternion_addition.png" mime-type="image/png"/></media>
+   <caption>Quaternion addition closely resembles vector addition.  Corresponding coefficients are added to yield the sum quaternion.  This operation is associative and commutative.</caption>
+</figure>
+
+The dot product and magnitude of a quaternion also closely resemble those operations for vectors.  Note that a <term>unit quaternion</term> is a quaternion with magnitude 1 under this definition:
+
+   <figure id="QuaternionDotProd"><title> Dot (Inner) Product of p and q</title>
+   <media id="idp873392" alt=""><image src="../../media/quaternion_dot.png" mime-type="image/png"/></media>
+
+<caption>The dot product of quaternions is analogous to the dot product of vectors.</caption></figure>
+
+   <figure id="QuaternionMagnitude"><title> Magnitude of Quaternion p</title>
+   <media id="idp2048896" alt=""><image src="../../media/quaternion_mag.png" mime-type="image/png"/></media>
+   <caption>As with vectors, the square of the magnitude of p is the dot product of p with itself.</caption>
+</figure>
+
+Multiplication, however, is not, due to the definitions of i, j, and k:
+
+<figure id="QuaternionMultiplication"><title> Multiplication of Quaternions p and q</title>
+   <media id="idp3416336" alt=""><image src="../../media/quaternion_multiplication.png" mime-type="image/png"/></media>
+   <caption>This result can be confirmed by carrying out long multiplication of p and q.  There is no analog in vector arithmetic for quaternion multiplication.</caption>
+</figure>
+
+Quaternion multiplication also has two equivalent matrix forms which will become relevant later in the derivation of the alignment method:
+
+<figure id="QuaternionMatrixProducts"><title> Multiplication of Quaternions p and q, Matrix Forms</title>
+   <media id="idm10175664" alt=""><image src="../../media/quaternion_products.png" mime-type="image/png"/></media>
+   <caption>Note that quaternions can be represented as column vectors with the imaginary components omitted.  This allows vector notation to be used for many quaternion operations, including multiplication.  The quaternion a + bi + cj + dk, for example, may be represented by a column vector of the form [a, b, c, d].</caption>
+</figure>
+
+These useful properties of quaternion multiplication can be derived easily using the matrix form for multiplication, or they can be proved by carrying out the products:
+<figure id="QuaternionProperties"><title> Some properties of Quaternion Multiplication</title>
+   <media id="idp1752592" alt=""><image src="../../media/quaternion-properties.png" mime-type="image/png"/></media>
+   <caption>Some useful properties. q* is the quaternion conjugate, a-bi-cj-dk</caption>
+</figure>
+</para>
+</section>
+
+<section id="QuaternionRotations">
+<title>Quaternions and Three-Dimensional Rotations</title>
+<para id="QuaternionRotationsPara1">A number of different methods exist for denoting rotations of rigid objects in three-dimensional space.  These are introduced in <link document="http://cnx.org/content/m11621/latest/">a module on protein kinematics</link>.
+
+<term>Unit quaternions</term> represent a rotation of an angle around an arbitrary axis. A rotation by the angle theta about an axis represented by the unit vector v = [x, y, z] is represented by a unit quaternion:
+<figure id="RotationQuaternion"><title> Unit Quaternion and Rotation </title>
+   <media id="idm3039152" alt=""><image src="../../media/rotation_quaternion.png" mime-type="image/png"/></media>
+   <caption>This unit quaternion represents a rotation of theta about the axis defined by unit vector v = [x, y, z].</caption>
+</figure></para><para id="element-628">Like rotation matrices, quaternions may be composed with each other via multiplication.  The major advantage of the quaternion representation is that it is more robust to <term>numerical instability</term> than orthonormal matrices.  Numerical instability results from the fact that, because computers use a finite number of bits to represent real numbers, most real numbers are actually represented by the nearest number the computer is capable of representing.  Over a series of floating point operations, the error caused by this inexact representation accumulates, quite rapidly in the case of repeated multiplications and divisions.  In manipulating orthonormal transformation matrices, this can result in matrices that are no longer orthonormal, and therefore not valid rigid transformations.  Finding the "nearest" orthonormal matrix to an arbitrary matrix is not a well-defined problem.  Unit-length quaternions can accumulate the same kind of a numerical error as rotation matrices, but in the case of quaternions, finding the nearest unit-length quaternion to an arbitrary quaternion <emphasis>is</emphasis> well defined.  Additionally, because quaternions correspond more directly to the axis-angle representation of three-dimensional rotations, it could be argued that they have a more intuitive interpretation than rotation matrices.  Quaternions, with four parameters, are also more memory efficient than 3x3 matrices.  For all of these reasons, quaternions are currently the preferred representation for three-dimensional rotations in most modeling applications.</para><para id="element-823">Vectors can be represented as purely imaginary quaternions, that is, quaternions whose scalar component is 0.  The quaternion corresponding to the vector v = [x, y, z] is q = xi + yj + zk.</para><para id="element-987">We can perform rotation of a vector in quaternion notation as follows:
+
+<figure id="QuaternionRotation"><title> Rotation Using Unit Quaternions </title>
+   <media id="idm1508832" alt=""><image src="../../media/quaternion_rotation.png" mime-type="image/png"/></media>
+   <caption>In this figure, r is the vector [x, y, z] in quaternion form, q is a unit (rotation) quaternion, q* is the conjugate of q, and r' is r after the rotation has been performed.  </caption>
+</figure></para>
+</section>
+
+<section id="QuaternionAlignmentSection">
+<title>Optimal Alignment with Quaternions</title>
+<para id="element-976">The method presented here is from Berthold K. P. Holm, "Closed-form solution of absolute orientation using unit quaternions." Journal of the Optical Society of America A, 4:629-642.</para><para id="QuaternionAlignmentPara1">The alignment problem may be stated as follows:
+<list id="alignmentGivens"><item> We have two sets of points (atoms) A and B for which we wish to find an optimal alignment, defined as the alignment for which the root mean square difference between each point in A and its corresponding point in B is minimized.</item>
+<item> We know which point in A corresponds to which point in B.  This is necessary for any RMSD-based method.  </item>
+</list></para><para id="element-570">As for the case of rotation matrices, the translational part of the alignment consists of making the centroids of the two data sets coincide. To find the optimal rotation using quaternions, recall that the dot product of two vectors is maximized when the vectors are in the same direction. The same is true when the vectors are represented as quaternions. Using this property, we can define a quantity that we want to maximize (proof <link document="m11608" resource="quaternion-proof1.png">here</link>):
+
+<figure id="RotationObjectiveFunction"><title> The Objective Function for Rotational Alignment (Quaternion Form) </title>
+   <media id="idp414720" alt=""><image src="../../media/objective_function.png" mime-type="image/png"/></media>
+   <caption> We want to find the rotation on set A that maximizes the sum of the dot products of the rotated vectors of A with the vectors of B, all expressed as offsets from the set centroids. </caption>
+</figure>
+
+Equivalently, using the last property from the section "Introduction to quaternions", we get:
+<figure id="RotationObjectiveFunction2"><media id="idm9611776" alt=""><image src="../../media/objective_function2.png" mime-type="image/png"/></media>
+<caption>The objective restated.</caption></figure>
+
+Now, recall that quaternion multiplication can be represented by matrices, and that the quaterions a and b have a 0 real component:
+<figure id="RotationObjectiveFunction3"><media id="idp3848160" alt=""><image src="../../media/objective_function3.png" mime-type="image/png"/></media>
+<caption>These substitutions will be used to restate the function to be maximized.</caption></figure>
+
+Using these matrices, we can derive a new form for the objective function:
+<figure id="RotationObjectiveFunction5"><media id="idm661664" alt=""><image src="../../media/objective_function5.png" mime-type="image/png"/></media>
+   <caption>The third step follows because each term in the sum is multiplied on the left and right by q, so the q factors can be moved outside the sum.  The fourth step simply renames the sum of matrix products to a single matrix, N, based on which we can find q.</caption></figure>
+
+where:
+
+<figure id="RotationObjectiveFunction4"><media id="idm9430192" alt=""><image src="../../media/objective_function4.png" mime-type="image/png"/></media>
+<caption>Now the problem is stated in terms of a matrix product optimization.</caption></figure>
+
+The quaternion that maximizes this product is the eigenvector of N that corresponds to its most positive eigenvalue (proof <link document="m11608" resource="quaternion-proof2.png">here</link>).  The eigenvalues can be found by solving the following equation, which is quartic in lambda:
+
+<figure id="Solution1">
+   <media id="idp6476208" alt=""><image src="../../media/solution1.png" mime-type="image/png"/></media>
+   <caption>I is the 4x4 identity matrix.</caption>
+</figure>
+
+This quartic equation can be solved by a number of standard approaches.  Finally, given the maximum eigenvalue lambda-max, the quaternion corresponding to the optimal rotation is the eigenvector v:
+
+<figure id="Solution2"><media id="idm3662640" alt=""><image src="../../media/solution2.png" mime-type="image/png"/></media>
+   <caption>This equation can be solved to find the optimal rotation.</caption></figure>
+
+A closed-form solution to this equation for v can be found by applying techniques from linear algebra.  One possible algorithm, based on constructing a matrix of cofactors, is presented in appendix A5 of the source paper <cite resource="horn"><cite-title>[3]</cite-title></cite>.
+
+</para><para id="element-76">In summary, the alignment algorithm works as follows:
+<list id="AlignmentSummary">
+<item>Recalculate atom coordinates as displacements from the centroid of each molecule.  The optimal translation superimposes the centroids.</item>
+<item>Construct the matrix N based on matrices A and B for each atom.</item>
+<item>Find the maximum eigenvalue by solving the quartic eigenvalue equation.</item>
+<item>Find the eigenvector corresponding to this eigenvalue.  This vector is the quaternion corresponding to the optimal rotation.</item>
+</list></para><para id="element-657">This method appears computationally intensive, but has the major advantage over other approaches of being a closed-form, unique solution.</para>
+</section>
+
+</section>
+
+
+
+
+<section id="IntramolecularDistanceSection">
+<title>Intramolecular Distance and Related Measures</title>
+<para id="element-270">RMSD and lRMSD are not ideally suited for all applications.  For example, consider the case of a given conformation A, and a set S of other conformations generated by some means.  The goal is to estimate which conformations in S are closest in potential energy to A, making the assumption that they will be the conformations most structurally similar to A.  The lRMSD measure will find the conformations in which the overall average atomic displacement is least.  The problem is that if the quantity of interest is the potential energy of conformations, not all atoms can be treated equally.  Those on the outside of the protein can often move a fair amount without dramatically affecting the energy.  In contrast, the core of the molecule tends to be more compact, and therefore a slight change in the relative positions of a pair of atoms could lead to overlap of the atoms, and therefore a completely infeasible structure and high potential energy.  A class of distance measures and pseudo-measures based on <term>intramolecular</term> distances have been developed to address this shortcoming of RMSD-based measures.</para><para id="comparing_shapes_para3">Assume we wish to compare two conformations P and Q of a molecule with N atoms. Let <m:math><m:msub><m:ci>p</m:ci><m:ci>ij</m:ci></m:msub></m:math> be the distance between atom i and atom j in conformation P, and let <m:math><m:msub><m:ci>q</m:ci><m:ci>ij</m:ci></m:msub></m:math> be the same distance for conformation Q. Then
+  the intramolecular distance is defined as
+
+    <figure id="alpha_rel3"><media id="idm10821936" alt=""><image src="../../media/alpha_relation3.png" mime-type="image/png"/></media>
+    <caption> Intra-molecular distance (dRMSD) </caption>
+  </figure>
+
+
+  One of the main computational advantages of this class of approaches is that we do not have to compute the alignment
+  between P and Q. On the other hand, for this metric we need to sum over a
+  quadratic number of terms, whereas for RMSD the number of terms is linear in
+  the number of atoms. Approximations can be made to speed up this computation, as shown in <cite target-id="lotan"><cite-title>[7]</cite-title></cite>. Also, the intramolecular distance measure given above, which is sometimes referred to as the dRMSD, is subject to the problem that pairs of atoms most distant from each other are the ones that contribute the greatest amount to their measured difference.  </para>
+
+
+<para id="element-845">An interesting open problem is to come up with
+  physically meaningful molecular distance metric that allows for fast nearest
+  neighbor computations. This can be useful for, for example, clustering   
+  conformations.  One proposed method is the <term>contact distance</term>.  Contact distance requires constructing a <term>contact map</term> matrix for each conformation indicating which pairs of atoms are less than some threshold separation.  The distance measure is then a measure of the difference of the contact maps.  
+<figure id="ContactDistanceFigure"><title>Contact Distance</title>
+   <media id="idm615520" alt=""><image src="../../media/contact_distance.png" mime-type="image/png"/></media>
+   <caption>Contact maps (C) are calculated for each structure, and the differences in these contact maps used to define a distance D.</caption>
+</figure>
+
+Other distance measures attempt to weight each pair in the dRMSD based on how close the atoms are, with closer pairs given more weight, in keeping with the intuition that small changes in the relative positions of nearby atoms are more likely to result in collisions.  One such measure is the normalized <term>Holm and Sander Score</term>.  
+<figure id="HolmSanerFigure"><title>Holm and Sander Distance</title>
+   <media id="idm4158256" alt=""><image src="../../media/holm_sander_distance.png" mime-type="image/png"/></media>
+   <caption>This distance function is weighted to accentuate the importance of differences in structures that are relatively close to each other.  These are the contacts most likely to affect the potential energy of the structure.</caption>
+</figure>
+
+  This score is technically a <term>pseudo-measure</term> rather than a measure because it does not necessarily obey the <term>triangle inequality</term>.</para>
+
+<para id="Summary">
+
+The definition of distance measures remains an open problem.  For reference on ongoing work, see articles that compare several methods, such as <cite resource="wallin"><cite-title>[5]</cite-title></cite>.
+
+</para>
+
+</section>
+
+
+
+
+
+<para id="element-359"><title>Recommended Reading:</title>
+
+The first two papers are the original descriptions of the Kabsch Algorithm, and use rotations represented as orthonormal matrices to find the correct rotational transformation.  Many software packages use this alignment method. The third and fourth papers use quaternions.  The alignment method presented in the previous section comes from the third paper:
+<list id="alignment_references"><item>W. Kabsch. (1976). <link url="http://journals.iucr.org/a/issues/1976/05/00/a12999/a12999.pdf">A Solution for the Best Rotation to Relate Two Sets of Vectors</link>. Acta Crystallographica, 32, 922-923.</item>
+<item>W. Kabsch. (1978). <link url="http://journals.iucr.org/a/issues/1978/05/00/a15629/a15629">A Discussion of the Solution for the Best Rotation to Relate Two Sets of Vectors</link>. Acta Crystallographica, 34, 827-828.</item>
+
+<item>Berthold K. P. Horn. (1986). <link url="http://josaa.osa.org/abstract.cfm?id=2711">Closed-form solution of absolute orientation using unit quaternions.</link> Journal of the Optical Society of America, 4:629-642.</item>
+
+
+<item>E. A. Coutsias and C. Seok and K. A. Dill. (2004). <link url="http://www3.interscience.wiley.com/cgi-bin/fulltext/109627463/PDFSTART">Using quaternions to calculate RMSD.</link> Journal of Computational Chemistry, 25, 1849-1857.</item>
+
+<item>Wallin, S., J. Farwer and U. Bastolla. (2003).  <link url="http://www3.interscience.wiley.com/cgi-bin/abstract/101019757/ABSTRACT">Testing similarity measures with continuous and discrete protein models </link>.  Proteins, 50:144-157.</item>
+
+</list></para>
+
+ 
+</content>
+
+<bib:file>
+
+    <bib:entry id="kabscha">
+    <bib:article>
+     <bib:author> Kabsch, W.   </bib:author>  
+     <bib:title> A Solution for the Best Rotation to Relate Two Sets of Vectors </bib:title>   
+     <bib:journal> Acta Crystallographica </bib:journal> 
+     <bib:year> 1976</bib:year>    
+     <bib:volume> 32</bib:volume>  
+     <bib:pages> 922-923 </bib:pages>   
+    </bib:article>
+    </bib:entry>	
+
+    <bib:entry id="kabschb">
+    <bib:article>
+     <bib:author>Kabsch, W.   </bib:author>  
+     <bib:title> A Discussion of the Solution for the Best Rotation to Relate Two Sets of Vectors </bib:title>   
+     <bib:journal> Acta Crystallographica </bib:journal> 
+     <bib:year> 1978</bib:year>    
+     <bib:volume> 34</bib:volume>  
+     <bib:pages> 827-828 </bib:pages>   
+    </bib:article>
+    </bib:entry>
+
+    <bib:entry id="horn">
+    <bib:article>
+     <bib:author> Horn, Berthold K. P. </bib:author>  
+     <bib:title> Closed-form solution of absolute orientation using unit quaternions </bib:title>   
+     <bib:journal> Journal of the Optical Society of America </bib:journal> 
+     <bib:year> 1986</bib:year>    
+     <bib:volume> 4</bib:volume>  
+     <bib:pages> 629-642 </bib:pages>   
+    </bib:article>
+    </bib:entry>	
+
+    <bib:entry id="coutsias">
+    <bib:article>
+     <bib:author> Coutsias, E. A., C. Seok and K. A. Dill   </bib:author>  
+     <bib:title> Using quaternions to calculate RMSD </bib:title>   
+     <bib:journal> Journal of Computational Chemistry </bib:journal> 
+     <bib:year> 1978</bib:year>    
+     <bib:volume> 25</bib:volume>  
+     <bib:pages> 1849-1857 </bib:pages>   
+    </bib:article>
+    </bib:entry>	
+
+    <bib:entry id="golub">
+    <bib:book>
+     <bib:author> Golub, G. H. and Loadn, C. F. V. </bib:author>  
+     <bib:title> Matrix Computations </bib:title>   
+     <bib:publisher> Johns Hopkins University Press </bib:publisher> 
+     <bib:year> 1996</bib:year>    
+     <bib:edition> third </bib:edition>  
+    </bib:book>
+    </bib:entry>	
+
+
+
+
+    <bib:entry id="wallin">
+    <bib:article>
+     <bib:author> Wallin, S., J. Farwer and U. Bastolla   </bib:author>  
+     <bib:title> Testing similarity measures with continuous and discrete protein models </bib:title>   
+     <bib:journal> Proteins </bib:journal> 
+     <bib:year> 2003</bib:year>    
+     <bib:volume> 50</bib:volume>  
+     <bib:pages> 144-157 </bib:pages>   
+    </bib:article>
+    </bib:entry>	
+
+    <bib:entry id="lotan">
+    <bib:book>
+     <bib:author> Schwarzer, F. and Lotan, I.  </bib:author>  
+     <bib:title> Approximation of protein structure for fast similarity measures </bib:title>   
+     <bib:publisher> ACM. Proceedings of the seventh annual international conference on research in computational molecular biology. </bib:publisher> 
+     <bib:year> 2003</bib:year>      
+    </bib:book>
+    </bib:entry>	
+
+
+
+</bib:file>
+
+</document>

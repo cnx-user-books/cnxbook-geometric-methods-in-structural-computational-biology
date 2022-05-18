@@ -1,0 +1,641 @@
+<document xmlns="http://cnx.rice.edu/cnxml" xmlns:m="http://www.w3.org/1998/Math/MathML" xmlns:md="http://cnx.rice.edu/mdml" xmlns:bib="http://bibtexml.sf.net/">
+  <title>Protein-Ligand Docking, Including Flexible Receptor-Flexible Ligand Docking</title>
+  <metadata><md:content-id>undefined</md:content-id><md:title/><md:uuid>4e7287b0-6c38-4829-abeb-3ae357bbf60f</md:uuid>
+</metadata>
+
+  <content>
+
+<para id="element-187"><list id="topicsList"><item> <link target-id=""> Background and Motivation</link> </item>
+<item> <link target-id="rigidreceptor"> Rigid Receptor Docking </link> </item>
+<item> <link target-id="flexiblereceptor"> Flexible Receptor Docking </link> </item>
+</list>
+</para>
+
+<section id="Intro">
+<title>Background and Motivation</title>
+<para id="element-1000">Many biological processes involve, at some point, the specific binding a protein to some target molecule.  The binding might constitute part of a signalling mechanism between cells, it might be part of a mechanical operation such as muscle contraction, or it might mediate a catalytic event, or it might be part of yet another process.  One way that drugs can work is <emphasis>competetive inhibition</emphasis>: binding to proteins more strongly than their natural binding partners, and thereby interrupting whatever process the protein mediates.</para><para id="element-100">As an example, consider non-steroidal anti-inflammatory drugs (NSAIDs) such as ibuprofen.  These drugs act on a class of proteins called cyclooxygenases (COX), which are involved in the synthesis of chemicals called prostaglandins, which in turn cause pain and inflammation.  Inhibition of COX can reduce pain, inflammation, and swelling by substantially reducing the amount of prostaglandins that can be produced.  NSAIDs generally work by binding to the active site of COX and blocking it (aspirin and other salicylates are an exception--they disable COX by modifying it chemically).  </para><para id="element-264">NSAIDs also illustrate one thing that can go wrong with drugs: side effects.  There are actually three classes of COX: COX-1, COX-2, and COX-3.  Of the three, COX-2 is the one associated with immune responses, inflammation, and abnormal pain.  COX-1 is present in all mammalian cells, as some baseline COX activity is normal.  Excessive inhibition of COX in humans is associated with stomach ulcers and indigestion.  The problem is one of specificity:  In many cases, it is sufficient to inhibit only COX-2 to treat pain and inflammation.  In fact, there is a class of NSAIDs called COX-2 inhibitors that do precisely that.   In other cases, side effects can be far more severe and dangerous.</para>
+</section>
+
+<para id="element-564">Laboratory techniques for drug discovery are very time-consuming and expensive.  Each candidate drug must be synthesized and assayed for activity on the target protein, as well as cross-reactivity with non-targets.  There is therefore a great deal of interest in developing computational techniques to assist with this stage of drug development.
+
+Although they are still largely an area of research rather than production, a number of automated methods have emerged for identifying promising drug candidates.  These methods generally fall into one of two categories:
+
+<list id="LeadDiscoveryMethods"><item><emphasis>De novo design</emphasis>:  In these approaches, an attempt is made to build a molecule from scratch to fit the binding site of a protein.  Often, this involves identifying molecular fragments (often from a database) that are complementary to particular parts of the binding site, and attempting to connect them into a single molecule.</item>
+
+<item><emphasis>Docking</emphasis>: This approach starts with a database of known molecules and attempts to place each one in the binding pocket of the protein and, if successful, estimates the affinity of the binding using a <emphasis>scoring function</emphasis>.  In the end, a list of the best-binding molecules for the protein being targeted is returned.</item>
+
+</list>
+
+This module is concerned with the latter set of techniques.  </para>
+
+<para id="element-332">Formally, the protein-ligand docking problem is the following: We are given a geometric and chemical description of a protein and an arbitrary small organic molecule. We want to determine computationally whether the small molecule will bind to the protein, and if so, we would like to estimate the geometry of the bound complex, as well as the affinity of the binding. Most algorithms include two components: a search technique to find the optimal placement of the ligand in the binding pocket of the protein, and a scoring function to rate each placement, as well as to rank candidate ligands against each other. The remainder of this module will cover a range of docking approaches, starting with the simplest, rigid-receptor methods, which make very restrictive assumptions about the dynamics of the protein and candidate ligands, and then moving on to more complex approaches that allow the receptor to change conformation. The latter methods have the potential to identify ligands that might be missed by simpler approaches.</para>
+
+    <figure id="trypsin1">
+        <media id="idm9184288" alt=""><image src="../../media/trypsin.jpg" mime-type="image/jpeg"/></media>
+        <caption>Trypsin, a protease involved in digestion (PDB structure ID 3ptb)</caption>
+    </figure>
+    <figure id="benzamidine">
+        <media id="idm2099280" alt=""><image src="../../media/benzamidine.jpg" mime-type="image/jpeg"/></media>
+        <caption>Benzamidine, a trypsin inhibitor (PDB structure ID 3ptb)</caption>
+    </figure>
+    <figure id="trypsindocked"><media id="idm912496" alt=""><image src="../../media/3ptb.jpg" mime-type="image/jpeg" width="600"/></media>
+        <caption>Stereo view of benzamidine (red) docked in the active site of trypsin (blue) (PDB structure ID 3ptb)</caption>
+    </figure>
+
+    <section id="components">
+    <title>Components of a Docking Program</title>
+        <para id="element-579">As stated earlier, protein-ligand docking methods generally consist of two components:  a ligand placement algorithm to enumerate and test possible poses for the ligand in the protein's active site, and a scoring function to evaluate each placement, as well as to evaluate one candidate ligand against another.  Each of these componets is introduced in more detail below.</para><section id="sampling">
+        <title>Ligand placement algorithm</title>
+        <para id="sampling1">The first part of any docking technique is a method to place the ligand in various candidate poses in the binding pocket of the receptor.  Although each placement could be completely random and independent, most algorithms either use heuristics based on the chemistry or geometry of the atoms involved (FlexX, DOCK), or use a standard optimization technique such as simulated annealing or a genetic algorithm (Autodock, Gold).  A few use explicit molecular dynamics simulation.
+        </para>
+        </section>
+      
+        <section id="scoring">
+        <title>Scoring function</title>
+        <para id="scoring1">The scoring function provides a way to rank placements of ligands relative to one another.  Ideally, the score should correspond directly to the binding affinity of the ligand for the protein, so that the best scoring ligands are the best binders.  Scoring functions generally fall into three categories: 
+        </para>
+            <section id="forcefield">
+            <title>Explicit force field scoring function</title> 
+            <para id="forcefield1">Modified versions of both the AMBER and CHARMM force fields (see <link document="">this module</link> for more on force fields) have been used as scoring functions.  For some complexes, they have been found to provide a good approximation of the free energy of binding.  Early versions of Autodock used a subset of the AMBER force field.
+            </para>
+            </section>
+
+            <section id="empirical">
+            <title>Empirical scoring functions</title>
+            <para id="empirical1">The score is expressed as a weighted sum:
+                <m:math>
+                 <m:apply> <m:sum/>
+ 		   <m:bvar>
+		     <m:ci>i</m:ci>
+		   </m:bvar>
+                   <m:condition>
+                     <m:apply>
+                       <m:in/>
+                       <m:ci>i</m:ci>
+                       <m:ci>interactions</m:ci>
+                     </m:apply>
+                   </m:condition>
+                   <m:apply><m:times/>
+                      <m:ci>
+                        <m:msub>
+                           <m:mi>ΔG</m:mi>
+                           <m:mi>i</m:mi>
+                        </m:msub>
+                      </m:ci>
+                      <m:apply>
+                        <m:ci type="fn">
+                          <m:msub>
+                            <m:mi>f</m:mi>
+                            <m:mi>i</m:mi>
+                          </m:msub>
+                        </m:ci>
+                        <m:ci>l, r</m:ci>
+                      </m:apply>
+                   </m:apply>
+                 </m:apply>
+                </m:math>
+
+where 
+              <m:math>
+                <m:ci>
+                 <m:msub>
+                  <m:mi>ΔG</m:mi>
+                  <m:mi>i</m:mi>
+                 </m:msub>
+                </m:ci>
+              </m:math>
+is an empirically determined weight for the ith interaction type.  It corresponds to the average free energy contribution of a single interaction of that type over the set of receptor-ligand systems used to normalize the scoring function.  The types of interactions that might be included in an empirical scoring function include hydrogen bonds, electrostatic interactions, hydrophobic contacts, solvent exclusion volume, and electrostatic interactions, among others.  Examples of empirical scoring functions include the Autodock 3.0 scoring function (see below), Protherics Inc.’s ChemScore <cite target-id="eldridge"><cite-title>[1]</cite-title></cite>, and Boehm’s SCORE1 <cite target-id="boehm"><cite-title>[2]</cite-title></cite>.
+
+            </para>
+            </section>
+
+            <section id="knowledge">
+            <title>Knowledge-based scoring functions</title>
+            <para id="knowledge1">Knowledge-based scoring functions are derived from a statistical analysis of structures of protein-ligand complexes in the RCSB Protein Databank (PDB).  Searches are made for each possible pair of atoms in contact with each other.  Interactions found to occur more frequently than would be predicted by random chance are considered attractive (stabilizing), and interactions that occur less frequently are considered repulsive (destabilizing).  Examples of knowledge-based scoring functions include Muegge’s  Potential of Mean Force function <cite target-id="muegge"><cite-title>[3]</cite-title></cite> and DrugScore <cite target-id="gohlke"><cite-title>[4]</cite-title></cite>.
+            </para>
+            </section>
+       </section>
+    </section>
+
+<section id="rigidreceptor">
+<title>Rigid Receptor Docking</title>
+  
+    <section id="parameterization">
+    <title>Parameterization of the Problem</title>
+    <para id="parameterization1">Many docking algorithms make the simplifying, but potentially quite inaccurate, assumption that the receptor is a rigid object and attempt to dock the ligand to it.  The receptor conformation used is generally one from a receptor-ligand complex whose structure has been determined by x-ray crystallography or NMR spectroscopy.  Because the receptor cannot move, the degrees of freedom of the problem are those of the ligand: three translational, three global-rotational, and one internal dihedral rotation for each rotatable bond.  It is generally assumed that bond lengths and the angles formed by adjacent bonds do not change, and on the scale of most ligands (10 to 40 atoms), this assumption is a reasonable one.  Docking to a rigid receptor is thus an optimization problem over a 6 + n dimensional space, where n is the number of rotatable bonds in the ligand.
+    </para>
+    </section>
+
+
+
+    <section id="examples">
+    <title>Examples of rigid-receptor docking programs</title>
+        <section id="autodock">
+        <title>Autodock 3.0</title>
+        <para id="adlink">Link to <link url="http://www.scripps.edu/pub/olson-web/doc/autodock/">The Autodock project home page</link>
+        </para>
+        <para id="autodock1">
+      Autodock is actually a set of closely related programs and algorithms developed at the Scripps Research Institute and the University of California at San Diego.
+        </para>
+            <section id="adsearch">
+            <title>Search technique</title>
+            <para id="adsearch1">Autodock can use one of several optimization methods to search for the best placement of the ligand:
+
+<list id="adplacement"><item>Simulated annealing: At each step of simulated annealing, the position and internal rotational state of the ligand is adjusted and the energy calculated.  If the energy decreases, the move is accepted.  If not, it may be accepted with some probability that depends on the current temperature of the annealing.  As the search goes on, the temperature is decreased, and eventually, the final state of the ligand is returned as the docked conformation.  Because simulated annealing is a Monte Carlo (randomized) method, different runs will generally produce different solutions.</item>
+
+<item>A genetic algorithm: The genetic algorithm represents the states of the degrees of freedom of the ligand as a string of digits, and this string is referred to as a gene.  A population of different genes is generated at random, and each is scored using the Autodock energy function.  Genes are selected to form the next population based on their score, with better scoring genes more likely to be selected.  A gene may be selected more than once, and some may not be selected at all.  Pairs of the selected genes are allowed to cross over with each other.  In this process, a segment of the gene is selected and the values in this range are exchanged between them.  The hope is that by combined two partially good solutions, we will eventually find a better solution.</item>
+
+<item>a Lamarckian genetic algorithm (LGA):  This is the same as the standard genetic algorithm except that, before they are scored, each conformation (gene) is subjected to energy minimization.  The next population is then founded by members of this energy-minimized population.   The name "Lamarckian" refers to the failed genetic theory of Jean-Baptiste Lamarck, who held that an organism could pass on changed experienced in its lifetime to its offspring.  This theory was eventually abandoned in favor of Mendel's now-familiar laws of inheritance.  The LGA is faster than both simulated annealing and the standard genetic algorithm, and it allows the docking of ligands with more degrees of freedom.</item>
+</list></para>
+            <para id="adsearch2">
+         Autodock uses a kinematic model for the ligand based on rotations around single bonds. The ligand begins the search process from a random location and orientation outside the binding site and by exploring the values for translations, rotations and its internal degrees of freedom, it eventually reaches the bound conformation.  Each degree of freedom is encoded as a single gene for the purpose of the genetic algorithm.  
+            </para><para id="element-122">The receptor is represented as a potential grid.  For each atom type, charge, and placement within the grid, an energy value may be rapidly computed, according to the scoring function below.  Precomputation of the grid is time-consuming, but each individual energy calculation is very rapid as a result.  The drawback of this approach is that there is no obvious way to introduce protein flexibility.  If the were allowed to moves, the entire grid would have to be recomputed at great computational expense.</para>
+            </section>
+            <section id="adscore">
+            <title>Scoring function</title>
+            <para id="adscore1">Distinction between docked conformations is carried out by the following empirical scoring function: 
+
+    <figure id="adscorefig"><media id="idp857664" alt=""><image src="../../media/adscore.jpg" mime-type="image/jpeg" width="600"/></media></figure>
+
+Because the score is an approximation of free energy, lower scores represent greater stability, and the lowest score should correspond to the docked conformation.  
+            </para>
+            </section>
+        </section>
+
+        <section id="flexx">
+        <title>FlexX</title>
+        <para id="flexxlink">Link to <link url="http://cartan.gmd.de/flexx/">The FlexX home page</link>
+       </para>
+        <para id="flexx1">FlexX was developed at the Institute for Algorithms and Scientific Computating at the German National Research Center for Computer Science in Sankt Augustin, Germany.  The basic procedure is to break the ligand into fragments, then repeatedly place an anchor fragment and incrementally build the entire ligand in place.</para>
+            <section id="flexxsearch">
+            <title>Search technique</title>
+            <para id="flexxsearch1">For each atom in the ligand and receptor, a set of interaction surfaces is generated and stored.  The interaction surfaces represent ideal locations for atoms of the other molecule to form some stabilizing interaction.  The shape, size, and location of each surface depends on the type of interaction--hydrogen bonding, electrostatic (ionic), aromatic, or lipophilic (hydrophobic).
+
+
+<!-- Interaction surfaces consist of spherical arcs, spherical sections, and spherical rectangles, depending on the type of interaction being modeled. --></para>
+             <para id="flexxsearch2">
+The ligand is broken into fragments, separated by rotatable bonds, and a base fragment is chosen.  The base fragment is placed by aligning a triangle formed by three of its atoms with interaction surfaces of receptor atoms, using a technique called pose clustering <cite target-id="rarey"><cite-title>[7]</cite-title></cite>.  The choice of base fragment is critical, because a fragment with insufficient interaction surfaces will provide too little guidance for its initial placement.  For each sufficiently distinct placement of the base fragment, additional fragments are added in such a way as to maximize interactions and optimize the scoring function.
+            </para>
+            <para id="flexxsearch3">Because FlexX generates candidate structures by the matching of interaction surfaces, it dramatically decreases the size of the search space compared to a full search of the conformation space, therefore improving the running time.  On the other hand, the choice of the anchor fragment is difficult and has the potential to determine which solutions are reachable.  In practice, however, FlexX and its derivatives (FlexS, FlexE, and FlexX-Pharm) work well enough to have been incorporated in a number of corporate automated drug discovery applications.
+
+            </para>
+            </section>
+            <section id="flexxscore">
+            <title>Scoring function</title>
+            <para id="flexxscore1">
+FlexX uses a variant of the SCORE1 scoring function developed by Hans-Joachim Boehm for the de novo enzyme inhibitor design package LUDI.  The scoring function has the following form:
+            </para>
+
+    <figure id="flexxscorefig"><media id="idp3607440" alt=""><image src="../../media/flexxscore.jpg" mime-type="image/jpeg" width="600"/></media></figure>
+             <para id="flexxscore2">
+                Where f is a penalty function for deviations from ideal geometry for each kind of interaction, and f* is a function penalizing for lipophilic interactions deviating from an ideal separation distance.
+             </para>
+
+            </section>
+        </section>
+
+        <section id="dock">
+        <title>DOCK</title>
+        <para id="docklink">
+        <link url="http://dock.compbio.ucsf.edu/">The Dock home page</link>
+        </para>
+        <para id="dock1">
+           Dock 1.0, first described in 1982 <cite target-id="kuntz"><cite-title>[8]</cite-title></cite>, was the first automated receptor-ligand docking program.  It was developed in the Department of Pharmacology at the University of California at San Francisco.  Dock 4.0, the current version, was released in 1997 <cite target-id="ewing"><cite-title>[9]</cite-title></cite>.
+        </para>
+            <section id="docksearch">
+            <title>Search technique</title>
+            <para id="docksearch1">Like FlexX, Dock is driven by the geometry of the ligand and active site.  The program approximates the shape of the binding cavity of the receptor with spheres.  It then attempts to match the ligand to some subset of the centers of these spheres.  Early versions used geometric hashing (see <link document="">this module, covering local alignment methods</link>) to perform this matching, but more recent versions use bipartite graph matching (version 3.5) and single graph matching (version 4.0) for improved speed.</para>
+            </section>
+            <section id="dockscore">
+            <title>Scoring function</title>
+            <para id="dockscore1">
+ Dock offers three scoring functions.  The first is based on an approximation to the Lennard-Jones potential (Van der Waals interactions).  This essentially enforces geometric alignment and shape constraints.
+	The second uses the program DELPHI to calculate the electrostatic potential of the complex.
+	The third calculates the energy of the complex under the AMBER force field.
+            </para>
+            </section>
+        </section>
+    </section>
+ 
+    <section id="links">
+     <title>Links</title>
+     <para id="link1">
+     <list id="linklist">
+        <item><link url="http://www.uni-paderborn.de/~lst/HotDock/index.html">HotDock, a human-guided docking program</link> </item>
+
+        <item> <link url="http://www.bio.com/">Bio.com, a clearinghouse of the latest information about the bio-tech industry</link> </item>
+
+        <item><link url="http://www.eyesopen.com/babel/">Babel, a program to convert between most common molecular file formats</link> </item>
+
+        <item><link url="http://www.ks.uiuc.edu/Development/">Software developed by the Theoretical and Computational Biophysics group at UIUC and the Beckman Institute.  Includes NAMD, a molecular dynamics simulator, and VMD, a molecule visualizer.</link></item>
+
+        <item><link url="http://www.umass.edu/microbio/rasmol/">Protein Explorer (Rasmol), a simple molecule visualizer.</link></item>
+    </list>
+    </para>
+    </section>
+</section>
+
+<section id="flexiblereceptor">
+<title>Flexible Receptor Docking</title>
+
+  <section id="introduction">
+  <title> Introduction </title>
+
+  <para id="intro_para_1"><!--  The ability to predict the bound conformations and interaction energy between small organic molecules and biological receptors, such as proteins and DNA, is of extreme physiological and pharmacological importance. Hence, there has been a considerable effort from both academia and industry to develop computational methods that can be used to determine the affinity with which a ligand will bind a target receptor. These methods usually include docking algorithms that compute the three dimensional structure of the complex as would it be determined experimentally using X-ray crystallography or Nuclear Magnetic Resonance (NMR) methods. -->
+
+As previously mentioned, docking entails determining not only the identity and three dimensional structure of the bound ligand, but also how the binding process affects the conformation of the receptor. This section will review the different receptor flexibility representations that have been proposed to study receptor conformational changes in the context of structure based drug design.
+  </para>
+        
+  <para id="intro_para_2">A central paradigm which was used in the development of the first docking programs was the lock-and-key model first described by Fischer <cite target-id="fischer"><cite-title>[10]</cite-title></cite>. In this model the three dimensional structure of the ligand and the receptor complement each other in the same way that a lock complements a key. However, further work confirmed that the lock-and-key model is not the most correct description for ligand binding. A more accurate view of this process was first presented by Koshland <cite target-id="koshland"><cite-title> [11] </cite-title></cite> in the <emphasis>induced fit</emphasis> model. In this model the three dimensional structure of the ligand and the receptor adapt to each other during the binding process. It is important to note that not only the structure of the ligand but also the structure of the receptor changes during the binding process. This occurs because the introduction of a ligand modifies the chemical and structural environment of the receptor. As a result, the unbound protein conformational substates, corresponding to the low energy regions of the protein energy landscape are likely to change. The induced fit model is supported by multiple observations in different proteins such as streptavidin, HIV-1 protease, DHFR, aldose reductase and many others.
+  </para>
+
+  <para id="intro_para_3">More information about some of these proteins and other proteins motions can be found at the following links:
+        <list id="info_list">
+        <item>
+        <link url="http://srdata.nist.gov/hivdb/">HIV Protease Database</link>
+        </item>
+
+        <item>
+        <link url="http://chem-faculty.ucsd.edu/kraut/dhfr.html">DHFR the MOVIE homepage</link>
+        </item>
+
+        <item>
+        <link url="http://molmovdb.mbb.yale.edu/molmovdb/">Database of Macromolecular Movements</link>
+        </item>
+        </list>
+        
+        
+        Although it has been clearly established that a protein is able to undergo conformational changes during the binding process, most docking studies consider the protein as a rigid structure. The reason for this crude approximation is the extraordinary increase in computational complexity that is required to include the degrees of freedom of a protein in a modeling study. There is currently no computationally efficient docking method that is able to screen a large database of potential ligands against a target receptor while considering the full flexibility of both ligand and receptor. In order for this process to become efficient, it is necessary to find a representation for protein flexibility that avoids the direct search of a solution space comprised of thousands of degrees of freedom. What follows is a brief review of the different representations that have been used to incorporate protein flexibility in the modeling of protein/ligand interactions. A common theme behind all these approaches is that the accuracy of the results is usually directly proportional to the computational complexity of the representation. The different types of flexibility representations models are grouped into categories that illustrate some of the key ideas that have been presented in the literature in recent years. However it is important to note that the boundaries between these categories are not rigid and in fact several of the publications referenced below could easily fall in more than one category.</para>
+  </section>
+
+  <section id="flexible_representations">
+  <title> Flexibility Representations </title>
+
+  <section id="soft_receptors">
+  <title> Soft Receptors </title>
+
+  <para id="soft_1">Perhaps the simplest solution to represent some degree of receptor flexibility in docking applications is the use of soft receptors. Soft receptors can be easily generated by relaxing the high energy penalty that the system incurs when an atom in the ligand overlaps an atom in the receptor structure. By reducing the van der Waals contributions to the total energy score the receptor is in practice made softer, thus allowing, for example, a larger ligand to fit in a binding site determined experimentally for a smaller molecule (see Figure 6). The rationale behind this approach is that the receptor structure has some inherent flexibility which allows it to adapt to slightly differently shaped ligands by resorting to small variations in the orientation of binding site chains and backbone positions. If the change in the receptor conformation is small enough, it is assumed that the receptor is capable of such a conformational change, given its large number of degrees of freedom, even though the conformational change itself is not modeled explicitly. It is also assumed that the change in protein conformation does not incur a sufficiently high energetic penalty to offset the improved interaction energy between the ligand and the receptor. The main advantage of using soft receptors is ease of implementation (docking algorithms stay unchanged) and speed (the cost of evaluating the scoring function is the same as for the rigid case).
+        
+   <figure id="figure_1">
+   <media id="idp1646912" alt=""><image src="../../media/flexible_1.jpg" mime-type="image/jpeg" height="366" width="500"/></media>
+   <caption> a) Three dimensional van der Walls representation of a target receptor. b) Close up image of a section of the binding site. For the purposes of rigid protein docking, the receptor is commonly described by the union of the volumes occupied by its atoms. The steric collision of any atom of the candidate ligand with the atoms of the receptor will result in a high energetic penalty. c) Same section of the binding site as shown in b) but with reduced radii for the atoms in the receptor. This type of soft representation allows ligand atoms to enter the shaded area without incurring a high energetic penalty.
+ </caption>
+   </figure>
+        
+   </para>
+
+   <para id="soft_2">
+	Another use of soft docking models is to improve convergence during energy minimization of the complex by avoiding local minima. In the initial stages of the conformational search the ligand is allowed to overlap with the receptor and nonbonded energy terms are modified to avoid high energy gradients. During the course of the minimization the interactions are then gradually restored to their original values simulating a ligand that is gradually exposed to the field of the receptor. This allows initial ligand/receptor conformations, which due to steric clashes would result in a very high energy penalty, to slowly adapt to each other in a complementary conformation without overlaps. One potential pitfall of this approach is the possibility that the ligand may become interlocked with the protein, leading to failure of the docking procedure.
+        Although the use of soft receptors presents a number of advantages such as ease of implementation and computation speed, it also makes use of conformational and energetic assumptions that are difficult to verify. This can easily result in errors, especially if the soft region is made excessively large to account for larger conformational changes on the part of the receptor.
+
+  </para>
+  </section>
+
+
+  <section id="specific_dofs">
+  <title> Selection of Specific Degrees of Freedom </title>
+        
+  <para id="dofs_1">In order to reduce the complexity of modeling the very large dimensional space representing the full flexibility of the protein, is it possible to obtain an approximate solution by selecting only a few degrees of freedom to model explicitly. The degrees of freedom chosen usually correspond to rotations around single bonds (see Figure 7). The reason for this choice is that these degrees of freedom are usually considered the natural degrees of freedom in molecules. Rotations around bonds lead to deviations from ideal geometry that result in a small energy penalty when compared to deviations from ideality in bond lengths and bond angles. This assumption is in good agreement with current modeling force fields such as CHARMM <cite target-id="mackerell"><cite-title> [12] </cite-title></cite> and AMBER <cite target-id="cornell"><cite-title> [13] </cite-title></cite>. Selection of which torsional degrees of freedom to model is usually the most difficult part of this method because it requires a considerable amount of a priori knowledge of alternative binding modes for a given receptor. This knowledge usually is a result of the availability of experimental structures obtained under different conditions or using different ligands. If multiple experimental structures are not available some insight can be obtained from simulation methods such as Monte Carlo (MC) or molecular dynamics (MD). The torsions chosen are usually rotations of aminoacid side chains in the binding site of the receptor protein. It is also common to further reduce the search space by using rotamer libraries for the aminoacid side chains
+
+   <figure id="figure_2">
+   <media id="idp1622864" alt=""><image src="../../media/flexible_2.jpg" mime-type="image/jpeg" height="388" width="500"/></media>
+   <caption> Stick representation of the same binding site section as shown in Figure 1. In order to approximate the flexibility of the receptor it is possible to carefully select a few degrees of freedom. These are usually select torsional angles of sidechains in the binding site that have been determined to be critical in the induced fit effect for a specific receptor. In this example the selected torsional angles are represented by arrows.
+
+ </caption>
+   </figure>
+
+    </para>
+
+    <para id="dofs_2">
+
+        An example of a program that takes the approach of selecting a few degrees of freedom to represent protein flexibility is the program GOLD <cite target-id="jones"><cite-title> [14] </cite-title></cite>. In GOLD, Jones et al. use a genetic algorithm (GA) to dock a flexible ligand to a semi-flexible protein. GAs are an optimization method that derives its behavior from a metaphor of the process of evolution. A solution to a problem is encoded in a chromosome and a fitness score is assigned to it based on the relative merit of the solution. A population of chromosomes then goes through a process of evolution in which only the fittest solutions survive. This program takes into account not only the position and conformation of the ligand but also the hydrogen bonding network in the binding site. This was achieved by encoding orientation information for donor hydrogen atoms and acceptors in the GA chromosome. This type of conformational information is very important because if the starting point for a docking study is a rigid crystallographic structure, the orientations of hydroxyl groups will be undetermined. Being able to model these orientations explicitly removes any bias that might result from positioning hydroxyl groups based upon a known ligand. One limitation of this work is that the binding site still remains essentially rigid because protein conformational changes are limited to a few terminal bonds. This program performed very well for hydrophilic ligands but encountered some difficulties when trying to dock hydrophobic ligands due to the reduced contribution of hydrogen bonding to the binding process. 
+        
+        More information about GOLD can be found at  the following link:
+        http://www.ccdc.cam.ac.uk/prods/gold/
+
+   </para>
+
+   </section>
+
+   <section id="multiple_structures">
+   <title> Multiple Receptor Structures </title>
+        
+   <para id="multiple_1">One possible way to represent a flexible receptor for drug design applications is the use of multiple static receptor structures (see Figure 8). This concept is supported by the currently accepted model that proteins in solution do not exist in a single minimum energy static conformation but are in fact constantly jumping between low energy conformational substates. In this way the best description for a protein structure is that of a conformational ensemble of slightly different protein structures coexisting in a low energy region of the potential energy surface. Moreover the binding process can be thought of as not exactly an induced fit model as described by Koshland  in 1958 <cite target-id="koshland"><cite-title> [11] </cite-title></cite> but more like a selection of a particular substate from the conformational ensemble that best complements the shape of a specific ligand.
+
+   </para>
+
+   <para id="multiple_2">
+        The use of multiple static conformations for docking gives rise to two critical questions. The first question is: How can we obtain a representative subset of the conformational ensemble typical of a given receptor? Currently there exist only a limited set of means to generate the three dimensional structure of macromolecules. The structures can be determined experimentally either from X-ray crystallography or NMR, or generated via computational methods such as Monte Carlo or molecular dynamics simulations. Simulations typically use as a starting point a structure determined by one of the experimental methods. Ideally we would like to use a sampling that provides the most extensive coverage of the structure space. Comparisons done between traditional molecular simulations and experimental techniques <cite target-id="clarage"><cite-title> [15] </cite-title></cite>, <cite target-id="philippopoulos"><cite-title> [16] </cite-title></cite> seem to indicate that X-ray crystallography and NMR structures seem to provide better coverage. However this balance can potentially change due to advances in computational methods. Another limitation in choosing data sources is availability. Although experimental data is preferable, the monetary and time cost of determining multiple structures experimentally is significantly higher than obtaining the same amount of data computationally. The second critical question is: What is the best way of combining this large amount of structural information for a docking study? This question also remains open. Current approaches use diverse ways of combining multiple structures.
+        
+   <figure id="figure_3">
+   <media id="idp2120624" alt=""><image src="../../media/flexible_3.jpg" mime-type="image/jpeg" height="384" width="500"/></media>
+   <caption> Superposition of multiple conformers of the same binding site section as shown in Figure 1. As an alternative to considering the target protein as a single three dimensional structure, it is possible to combine information from multiple protein conformations in a drug design effort. These can be either considered individually as rigid representatives of the conformational ensemble or can be combined into a single representation that preserves the most relevant structural information. 
+ </caption>
+   </figure>
+
+
+
+    </para>
+
+    <para id="multiple_3">        
+
+        One of the main advantages of using multiple structures instead of using a selection of degrees of freedom to represent protein flexibility is that the flexible region is not limited to a specific small region of the protein. Multiple structures allow the consideration of the full flexibility of the protein without the exponential blow up in terms of computational cost that would derive from including all the degrees of freedom of the protein. On the other hand, flexibility is modeled implicitly and as such only a small fraction of the conformational space of the receptor is represented. In addition, the method by which the multiple receptor structures are combined has a drastic influence on the possible results of the docking computation.
+        
+   </para>
+   </section>
+
+   <section id="molecular_simulations">
+   <title> Molecular Simulations </title>
+        
+   <para id="simulations_1">To simulate the binding process with as much detail as possible and avoid some of the limitations of previous flexibility models one can use force field based atomistic simulation methods such as Monte Carlo or molecular dynamics (see Figure 9). Whereas molecular dynamics applies the laws of classical mechanics to compute the motion of the particles in a molecular system, Monte Carlo methods are so called because they are based on a random sampling of the conformational space. The main advantage of Monte Carlo or molecular dynamics flexibility representations in docking studies is that they are very accurate and can model explicitly all degrees of freedom of the system including the solvent if necessary. Unfortunately, the high level of accuracy in the modeling process comes with a prohibitive computational cost. For example, in the case of molecular dynamics, state of the art protein simulations can only simulate periods ranging from 10 to 100 ns, even when using large parallel computers or clusters. Given that diffusion and binding of ligands takes place over a longer time span, it is clear that these simulations techniques cannot be used as a general method to screen large databases of compounds in the near future. It is however possible to carry out approximations that reduce the computational expense and lead to insights that would be impossible to gain using less flexible receptor representations. The cost of carrying out the computational approximations is usually a loss in accuracy.
+        
+   <figure id="figure_4">
+   <media id="idp3625616" alt=""><image src="../../media/flexible_4.jpg" mime-type="image/jpeg" height="114" width="500"/></media>
+   <caption> Molecular simulations can give a description of the full protein flexibility as it interacts with a ligand. Molecular dynamics applies the laws of classical mechanics to compute the motion of particles in a molecular system. Alternatively, the different conformational snapshots obtained at times 
+   <m:math>
+	    <m:ci>
+	      <m:msub>
+	        <m:mi>t</m:mi>
+	        <m:mn>0</m:mn>
+	      </m:msub>
+	    </m:ci>
+	  </m:math>, <m:math>
+	    <m:ci>
+	      <m:msub>
+	        <m:mi>t</m:mi>
+	        <m:mn>1</m:mn>
+	      </m:msub>
+	    </m:ci>
+	  </m:math>,   etc., can be used as multiple protein structures representing the conformational ensemble.
+ </caption>
+   </figure>
+        
+    </para>
+    </section>
+
+    <section id="collective_dofs">
+    <title> Collective Degrees of Freedom </title>
+
+    <para id="collective_1">
+     
+        An alternative representation for protein flexibility is the use of collective degrees of freedom. This approach enables the representation of full protein flexibility, including loops and domains, without a dramatic increase in computational cost. Collective degrees of freedom are not native degrees of freedom of molecules. Instead they consist of global protein motions that result from a simultaneous change of all or part of the native degrees of freedom of the receptor.
+
+   </para>
+
+   <para id="collective_2">
+        
+        Collective degrees of freedom can be determined using different methods. One method is the calculation of normal modes for the receptor <cite target-id="levy"><cite-title> [17] </cite-title></cite>. Normal modes are simple harmonic oscillations about a local energy minimum, which depends on the structure of the receptor and the energy function. For a purely harmonic energy function, any motion can be exactly expressed as a superposition of normal modes. In proteins, the lowest frequency modes correspond to delocalized motions, in which a large number of atoms oscillate with considerable amplitude. The highest frequency motions are more localized such as the stretching of bonds. By assuming that the protein is at an energy minimum, we can represent its flexibility by using the low frequency normal modes as degrees of freedom for the system. Zacharias and Sklenar <cite target-id="zacharias"><cite-title> [18] </cite-title></cite> applied a method similar to normal mode analysis to derive a series of harmonic modes that were used to account for receptor flexibility in the binding of a small ligand to DNA. This in practice reduced the number of degrees of freedom of the DNA molecule from 822 (3 × 276 atoms – 6) to approximately 5 to 40.
+        
+   <figure id="figure_5">
+   <media id="idm870048" alt=""><image src="../../media/flexible_5.jpg" mime-type="image/jpeg" height="672" width="480"/></media>
+   <caption> Representation of a collective degree of freedom for HIV-1 protease. Full protein flexibility can be represented in a low dimensional space using collective degrees of freedom. One method to obtain these is Principal Component Analysis. Principal components correspond to a concerted motion of the protein. The first principal component for HIV-1 protease is indicated by the arrows (top). By following this collective degree of freedom it is possible to generate alternative conformations for the receptor (bottom).
+ </caption>
+   </figure>
+        
+    </para>
+
+    <para id="collective_3">An alternative method of calculating collective degrees of freedom for macromolecules is the use of dimensional reduction methods. The most commonly used dimensional reduction method for the study of protein motions is principal component analysis (PCA). This method was first applied by Garcia <cite target-id="garcia"><cite-title> [19] </cite-title></cite> in order to identify high-amplitude modes of fluctuations in macromolecular dynamics simulations. It has also been used to identify and study protein conformational substates, as a possible method to extend the timescale of molecular dynamics simulations  and as a method to perform conformational sampling. In the next module, we present a protocol <cite target-id="teodoro_kavraki_phillips"><cite-title> [20] </cite-title></cite> based on PCA to derive a reduced basis representation of protein flexibility that can be used to decrease the complexity of modeling protein/ligand interactions. The most significant principal components have a direct physical interpretation. They correspond to a concerted motion of the protein where all the atoms move in specific spatial directions and with fixed ratios in overall displacement. An example is provided in Figure 10 where the directions and ratios are indicated by the direction and size of the arrows, respectively. By considering only the most significant principal components as the valuable degrees of freedom of the system, it is possible to cut down an initial search space of thousands of degrees of freedom to less than fifty. This is achievable because the fifty most significant principal components usually account for 80-90% of the overall conformational variance of the system. The PCA approach avoids some of the limitations of normal modes such as deficient solvent modeling and existence of multiple energy minima during a large motion. The last limitation contradicts the initial assumption of a single well energy potential.
+        
+        </para>
+
+        </section>
+
+       </section>
+</section>
+
+<para id="element-478"><title>Recommended Reading and Resources:</title>
+<list id="RecommendedReading"><item>A review of flexible receptor methods, as of 2003: Teodoro, M.L. and L.E. Kavraki. <link url="http://www.ingentaconnect.com/content/ben/cpd/2003/00000009/00000020/art00004">[HTML]</link>. (2003).  Conformational Flexibility Models for the Receptor in Structure Based Drug Design.  Current Pharmaceutical Design, 9, 1635-1648.</item>
+<item> A comprehensive overview of existing docking software, as of 2006: Sousa, S.F., Pedro Fernandes A., and Ramos, M. J. <link url="http://www3.interscience.wiley.com/cgi-bin/fulltext/112726585/HTMLSTART">[HTML]</link>. (2006). Protein-ligand docking: Current status and future challenges. Proteins: Structure, Function, and Bioinformatics, 65(1) 15-26. </item>
+</list>
+
+</para>
+
+  </content>
+  
+           <bib:file>
+
+	      <bib:entry id="eldridge">
+		<bib:article>
+		  <bib:author> Eldridge, M.D., C.W. Murray, T.R. Auton, G.V. Paolini, and R.P. Mee </bib:author>
+		  <bib:title> Empirical Scoring Functions. I. The Development of a Fast, Fully Empirical Scoring Function to Estimate the Binding Affinity of Ligands in Receptor Complexes </bib:title>
+		  <bib:journal> Journal of Computer-Aided Molecular Design </bib:journal>
+		  <bib:year> 1997 </bib:year>
+                  <bib:volume> 11</bib:volume>
+		  <bib:pages> 425-445 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="boehm">
+		<bib:article>
+		  <bib:author> Boehm, H-J </bib:author>
+		  <bib:title> The Development of a Simple Empirical Scoring Function to Estimate the Binding Constant for a Protein-Ligand Complex of Known Three-Dimensional Structure </bib:title>
+		  <bib:journal> Journal of Computer-Aided Molecular Design </bib:journal>
+		  <bib:year> 1994 </bib:year>
+                  <bib:volume> 8 </bib:volume>
+		  <bib:pages> 243-256  </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="muegge">
+		<bib:article>
+		  <bib:author> Muegge, I. and Y.C. Martin </bib:author>
+		  <bib:title> A General and Fast Scoring Function for Protein-Ligand Interactions: A Simplified Potential Approach </bib:title>
+		  <bib:journal> Journal of Medicinal Chemistry </bib:journal>
+		  <bib:year> 1999 </bib:year>
+                  <bib:volume> 42 </bib:volume>
+		  <bib:pages> 791-804  </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="gohlke">
+		<bib:article>
+		  <bib:author> Gohlke, H., M. Hendlich, and G. Klebe </bib:author>
+		  <bib:title> Knowledge Based Scoring Function to Predict Protein-Ligand Interactions </bib:title>
+		  <bib:journal> Journal of Molecular Biology </bib:journal>
+		  <bib:year> 2000 </bib:year>
+                  <bib:volume> 295 </bib:volume>
+		  <bib:pages> 337-356  </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="morris">
+		<bib:article>
+		  <bib:author> Morris, G.M., et al </bib:author>
+		  <bib:title> Automated docking using a Lamarckian genetic algorithm and an empirical binding free energy function </bib:title>
+		  <bib:journal> Journal of Computational Chemistry </bib:journal>
+		  <bib:year> 1998 </bib:year>
+                  <bib:volume> 19 </bib:volume>
+		  <bib:pages> 1639-1662   </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="kramer">
+		<bib:article>
+		  <bib:author> Kramer, B., M. Rarey, and T. Lengauer </bib:author>
+		  <bib:title> Evaluation of the FLEXX incremental construction algorithm for protein-ligand docking </bib:title>
+		  <bib:journal> Proteins </bib:journal>
+		  <bib:year> 1999 </bib:year>
+                  <bib:volume> 37 </bib:volume>
+		  <bib:pages> 228-241   </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="rarey">
+		<bib:article>
+		  <bib:author> Rarey, M., S. Wefing, and T. Lengauer </bib:author>
+		  <bib:title> Placement of Medium-Sized Molecular Fragments Into Active Sites of Proteins </bib:title>
+		  <bib:journal> Journal of Computer-Aided Molecular Design </bib:journal>
+		  <bib:year> 1996 </bib:year>
+                  <bib:volume> 10 </bib:volume>
+		  <bib:pages> 41-54  </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="kuntz">
+		<bib:article>
+		  <bib:author> Kuntz, I.D., J.M. Blaney, S.J. Oatley, R. Langridge, and T.E. Ferrin </bib:author>
+		  <bib:title> A Geometric Approach to Macromolecule-Ligand Interactions </bib:title>
+		  <bib:journal> Journal of Molecular Biology </bib:journal>
+		  <bib:year> 1982 </bib:year>
+                  <bib:volume> 18 </bib:volume>
+		  <bib:pages> 1175-1189  </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="ewing">
+		<bib:article>
+		  <bib:author>Ewing, T.J.A. and I.D. Kuntz</bib:author>
+		  <bib:title> Critical evaluation of search algorithms for automated molecular docking and database screening </bib:title>
+		  <bib:journal> Journal of Computational Chemistry </bib:journal>
+		  <bib:year> 1997 </bib:year>
+                  <bib:volume> 18</bib:volume>
+		  <bib:pages> 1175-1189 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="fischer">
+		<bib:article>
+		  <bib:author> Fischer, E. </bib:author>
+		  <bib:title> Einfluss der Configuration auf die Wirkung der Enzyme </bib:title>
+		  <bib:journal> Ber. Dtsch. Chem. Ges. </bib:journal>
+		  <bib:year> 1894 </bib:year>
+                  <bib:volume> 27</bib:volume>
+		  <bib:pages> 2985 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="koshland">
+		<bib:article>
+		  <bib:author> Koshland D.E. </bib:author>
+		  <bib:title> Application of a theory of enzyme specificity to protein synthesis </bib:title>
+		  <bib:journal> Proceedings of the National Academy of Sciences USA </bib:journal>
+		  <bib:year>1958</bib:year>
+                  <bib:volume> 44(2) </bib:volume>
+		  <bib:pages> 98-104 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="mackerell">
+		<bib:article>
+		  <bib:author> MacKerell, A.D. et al. </bib:author>
+		  <bib:title> All-atom empirical potential for molecular modeling and dynamics studies of proteins </bib:title>
+		  <bib:journal> J. Phys. Chem. B  </bib:journal>
+		  <bib:year>1998</bib:year>
+                  <bib:volume> 102 </bib:volume>
+		  <bib:pages> 3586-3616 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="cornell">
+		<bib:article>
+		  <bib:author> Cornell, W.D., et al. </bib:author>
+		  <bib:title> A second generation force field for the simulation of proteins and nucleic acids </bib:title>
+		  <bib:journal> J. Am. Chem. Soc. </bib:journal>
+		  <bib:year> 1995 </bib:year>
+                  <bib:volume> 117 </bib:volume>
+		  <bib:pages> 5179-5197 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="jones">
+		<bib:article>
+		  <bib:author> Jones, G., et al. </bib:author>
+		  <bib:title> Development and validation of a genetic algorithm for flexible docking </bib:title>
+		  <bib:journal> J Mol Biol </bib:journal>
+		  <bib:year>1997</bib:year>
+                  <bib:volume> 267(3) </bib:volume>
+		  <bib:pages> 727-748 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="clarage">
+		<bib:article>
+		  <bib:author> Clarage, J.B., et al. </bib:author>
+		  <bib:title> A sampling problem in molecular dynamics simulations of macromolecules </bib:title>
+		  <bib:journal> Proceedings of the National Academy of Sciences USA  </bib:journal>
+		  <bib:year>1995</bib:year>
+                  <bib:volume> 92(8) </bib:volume>
+		  <bib:pages> 3288-3292 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="philippopoulos">
+		<bib:article>
+		  <bib:author> Philippopoulos, M. and C. Lim </bib:author>
+		  <bib:title> Exploring the dynamic information content of a protein NMR structure: 
+		                     comparison of a molecular dynamics simulation with the NMR and X-ray structures of Escherichia coli ribonuclease </bib:title>
+		  <bib:journal> HI Proteins </bib:journal>
+		  <bib:year> 1999 </bib:year>
+                  <bib:volume> 36(1)</bib:volume>
+		  <bib:pages> 87-110</bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="levy">
+		<bib:article>
+		  <bib:author> Levy, R.M. and M. Karplus </bib:author>
+		  <bib:title> Vibrational Approach to the Dynamics of an alpha-Helix </bib:title>
+		  <bib:journal> Biopolymers </bib:journal>
+		  <bib:year>1979</bib:year>
+                  <bib:volume> 18 </bib:volume>
+		  <bib:pages> 2465-2495 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="zacharias">
+		<bib:article>
+		  <bib:author> Zacharias, M. and H. Sklenar </bib:author>
+		  <bib:title> Harmonic Modes as Variables to Approximately Account for Receptor Flexibility in Ligand-Receptor Docking Simulations: 
+		                     Application to DNA Minor Groove Ligand Complex </bib:title>
+		  <bib:journal> Journal of Computational Chemistry  </bib:journal>
+		  <bib:year>1999</bib:year>
+                  <bib:volume> 20(3) </bib:volume>
+		  <bib:pages> 287-300 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+	      <bib:entry id="garcia">
+		<bib:article>
+		  <bib:author> Garcia, A.E. </bib:author>
+		  <bib:title> Large-amplitude nonlinear motions in proteins </bib:title>
+		  <bib:journal> Physical Review Letters  </bib:journal>
+		  <bib:year>1992</bib:year>
+                  <bib:volume> 68(17) </bib:volume>
+		  <bib:pages> 2696-2699 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+
+              <bib:entry id="teodoro_kavraki_phillips">
+		<bib:article>
+		  <bib:author> Teodoro, M.L., G.N. Phillips, Jr., and L.E. Kavraki </bib:author>
+		  <bib:title> Understanding Protein Flexibility Through Dimensionality Reduction </bib:title>
+		  <bib:journal> Journal of Computational Biology  </bib:journal>
+		  <bib:year>2003</bib:year>
+                  <bib:volume> 10(3-4) </bib:volume>
+		  <bib:pages> 617-634 </bib:pages>
+		</bib:article>
+	      </bib:entry>
+	    
+	  </bib:file>
+
+</document>

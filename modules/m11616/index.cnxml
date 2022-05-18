@@ -1,0 +1,335 @@
+<document xmlns="http://cnx.rice.edu/cnxml" xmlns:m="http://www.w3.org/1998/Math/MathML" xmlns:md="http://cnx.rice.edu/mdml" xmlns:bib="http://bibtexml.sf.net/">
+  <title>Molecular Shapes and Surfaces</title>
+  <metadata><md:content-id>undefined</md:content-id><md:title/><md:uuid>5924d226-2458-446f-b39b-a3dd5868f36c</md:uuid>
+</metadata>
+
+  <content>
+<para id="element-998"><list id="topicsList"><title> Topics in this Module </title>
+   <item> <link target-id="Introduction"> Introduction </link>  </item>
+   <item> <link target-id="RepresentingShape"> Representing Shape </link>  
+   </item>
+   <item><link target-id="AlphaShapes">Alpha-Shapes</link><list id="alphashapetopics">
+          <item><link target-id="DelaunayTriangulation"> Delaunay Triangulation </link>  </item>
+          <item><link target-id="WeightedAlphaShapes">Weighted Alpha-Shapes</link></item>
+   </list></item>
+   <item> <link target-id="VolumeCalculation"> Calculating Molecular Volume Using Alpha-Shapes</link></item>
+   <item> <link target-id="Software">Related Software</link></item>
+ </list>
+</para>
+
+<section id="Introduction">
+  <title> Introduction </title>
+  <para id="element-790">Many problems in structural biology, require a researcher to understand the shape of a protein.   At first glance, this may seem obvious.  By opening a molecular visualizer, one can easily see the shape of a protein.  But what about calculating the surface area or volume of the protein?  What about performing analyses of the surface, such as looking for concave pockets in a protein that might be binding sites for other molecules?  What about calculating the volume and shape of those empty binding pockets, in order to find molecules that might fit in them?  What about determining whether a particular small molecule can fit in a binding pocket?</para><para id="element-349">All of these problems require some formal notion of the shape of a protein.  A protein structure file usually provides no more information than a list of atom locations in space and their types.  It will be assumed that for any given application, a radius may be defined for each atom type.  This leads to the space filling representation of a protein, in which each atom is treated as an impenetrable sphere.
+
+
+   <figure id="binding_site_illustration"><title> HIV-1 Protease </title>
+   <media id="idp3597808" alt=""><image src="../../media/hiv.png" mime-type="image/png"/></media>
+   <caption> A space filling representation of HIV-1 protease (yellow) with an inhibitory drug (red) blocking its binding site. 
+   </caption>
+   </figure>
+
+This representation allows for visualization, but it brings us no closer to being able to computationally decide which parts of which atoms are on the surface of the protein and which are buried inside the structure.  Some additional tool is needed to capture notions of interior and exterior and spatial adjacency.</para>
+  </section>
+
+  <section id="RepresentingShape">
+  <title> Representing Shape </title>
+  
+
+  <para id="representing_shape_para2">Using the sphere model for atoms, one way to define the shape of a molecule is as
+  the union of (possibly overlapping) balls in  <m:math>
+	      <m:msup>
+	        <m:ci>R</m:ci>
+		<m:cn> 3 </m:cn>
+	      </m:msup>
+	  </m:math>.
+
+  <figure id="vdw_illustration"><title> Space Filling Diagram </title>
+   <media id="idp2502064" alt=""><image src="../../media/vdw-spheres.png" mime-type="image/png" width="200"/></media>
+   <caption> The space filling diagram models each atom as a sphere in 3D. 
+   </caption>
+   </figure>
+
+  Since proteins inside our cells are in an aqueous environment, considering 
+  a protein's interactions with solvent molecules, particularly water, is very important for 
+  appropriately modeling them. Recall that one of the phenomena that determines the structure of a protein is the hydrophobic effect: some amino acid residues are stabilized by the presence of water, and others are repelled.
+  The extent of the interaction of a protein with the surrounding water 
+  depends on the surface area of the protein that can be reached by water molecules. Therefore, quantitave
+  modeling of the strength of interaction with solvent often involves computing the 
+  <term>solvent accessible surface area (SASA)</term>. Computing SASA can be done by 
+  regarding each solvent molecule as a sphere of set radius. This is of course a simplification, since water molecules are not spherical.  When this 
+  sphere rolls about the molecule, its center delineates the SASA. One can 
+  think of the SASA of a molecule as the result of growing each atom sphere by 
+  the radius of the solvent sphere. Instead, by taking what is swept out by the 
+  front of the solvent sphere, we obtain the  <term>molecular surface (MS)</term> model of 
+  the molecule. Alternatively, the MS can be obtained by removing a layer of 
+  solvent radius depth from the SASA model. 
+
+   <figure orient="horizontal" id="models_illustration"><title> Representations of Molecular Shape </title>
+   <subfigure id="models_depiction">
+   <title> VDW Representation </title>
+   <media id="idm381504" alt=""><image src="../../media/vdw-disks.png" mime-type="image/png"/></media>
+   <caption> Each atom can be modeled as a Van der Waals sphere in three dimensions. The union of the 
+             spheres gives the molecular surface. 
+   </caption>
+   </subfigure>
+   <subfigure id="better_models">
+   <title> Accessible Surface Area </title>
+   <media id="idp492640" alt=""><image src="../../media/sa-ms.png" mime-type="image/png"/></media>
+   <caption> Not all molecular surface is accessible to solvent due to the 
+             existence of small cavities. Rolling a solvent ball over the Van der Waals
+             spheres traces out the surface area experienced by the solvent. Solvent 
+             accessible surface area (SASA) is a very important measure for 
+             quantitatively determining the behavior and interaction tendencies of a protein.
+   </caption>
+   </subfigure>
+
+   <caption> Two different notions and representations of the surface of a molecule.
+   </caption>
+   </figure>
+
+The surface determined by SASA analysis depends on the size of a typical solvent molecule.  The larger the solvent, the less contoured the resulting surface will appear, because a larger probe molecules would not be able to fit into some of the interatomic spaces that a smaller one would.
+
+  <figure orient="horizontal" id="sasa_pictures"><title> Solvent Accessible Surface Area </title>
+   <subfigure id="small_probe">
+   <title> Probing the surface area with a solvent ball of radius 1.4 Å</title>
+   <media id="idp3426496" alt=""><image src="../../media/1_4_probe.png" mime-type="image/png" width="350"/></media>
+   <caption> Typically, solvent is modeled as a ball of radius 1.4 Å. This 
+             delineates the solvent accessible surface shown.
+   </caption>
+   </subfigure>
+   <subfigure id="big_probe">
+   <title> Probing the surface area with a solvent ball of radius 1.5 Å</title>
+   <media id="idp875728" alt=""><image src="../../media/1_5_probe.png" mime-type="image/png" width="350"/></media>
+   <caption> Increasing the radius of the solvent ball reduces the 
+             solvent accessible surface area because there are more cavities 
+             that a bulkier ball cannot penetrate.
+   </caption>
+   </subfigure>
+      <caption> Solvent-accessible surface area (SASA) for two different solvent radii.
+   </caption></figure></para>
+  </section>
+
+  <section id="AlphaShapes">
+  <title> Alpha-Shapes</title>
+  <para id="terminology_para1">Part of the problem with defining the shape of a protein is that we start with nothing but a point set, and the "shape" of a set of discontinuous points is poorly defined.  The problem is, what do we mean by shape?  As you saw above, the shape of a molecule depends on what is being used to measure it.  To handle this ambiguity, we will introduce a method of shape calculation based on a parameter, α, which will determine the radius of a spherical probe that will define the surface.  The method defines a class of shapes, called <term>α-shapes</term> <cite target-id="EdelsbrunnerMucke94"/> for any given point set.  It allows fast, accurate, and efficient calculations of  volume and surface area. 
+
+ </para>
+
+  <para id="element-830">α-shapes are a generalization of the <term>convex hull</term>. Consider a
+  point set S.  Define an α-ball as a sphere of radius α.  An α-ball is empty if it contains no points in S.  For any α between zero and infinity, the <term>α-hull</term> 
+  of S is the complement of the union of all empty α-balls.
+
+<list id="alphahullclasses"><item>For α of infinity, the α-shape is the convex hull of S.</item>
+<item>For α smaller than the 1/2 smallest distance between two points in S, the α-shape is S itself.</item>
+<item>For any α in between, one can think of the α-hull as the largest polygon (polyhedron) or set thereof whose vertices are in the point set and whose edges are of length less than 2α.  The presence of an edge indicates that a probe of radius α cannot pass between the edge endpoints. </item>
+</list>
+
+  <figure id="AlphaShapesFig"><title> Two-Dimensional α-Shapes </title>
+   <media id="idp5853072" alt=""><image src="../../media/alpha_illustration.jpg" mime-type="image/jpeg" width="700"/></media>
+   <caption>Some α-shapes are shown for a point set and various values of α.  On the left, α is 0 or slightly more, such that an α-ball can fit between any two points in the set.  The α-shape is therefore the original point set.  On the right, α is infinity, so an α-ball can be approximated locally by a line.  α on this scale yields the convex hull of the point set.  The middle image shows the α-shape for α equal to the radius of the ball shown.  This yields two disjoint boundaries, one of which has a significant indentation.  <term>Voids</term>, or empty pockets completely enclosed by the α-shape, are also possible, for instance if the α-shape is ring-like (in 2D) or forms a hollow shell (in 3D).
+   </caption></figure></para>
+
+  <section id="DelaunayTriangulation">
+  <title> Computing the Alpha-Shape: Delaunay Triangulation </title>
+  <para id="delaunay_triangulation_para1">A <term>triangulation</term> of a three-dimensional point set S is any decomposition of S into non-intersecting tetrahedra (triangles for two-dimensional point sets).
+
+The <term>Delaunay triangulation</term> of S is the unique triangulation of S satisfying the additional requirement that no sphere circumscribing a tetrahedron in the triangulation contains any point in S.  Although it is incidental to α-shapes, it is worth noting that the Delaunay triangulation maximizes the average of the smallest angle over all triangles.  In other words, it favors relatively even-sided triangles over sharp and stretched ones.
+
+  <figure id="Delaunay_illustration"><title> Two-Dimensional Delaunay Triangulation </title>
+   <media id="idp1936832" alt=""><image src="../../media/delaunaytriangle.png" mime-type="image/png" width="400"/></media>
+   <caption> The Delaunay triangulation of the four points given is shown 
+             on the right.  Note that the circumscribing circles on the left each contain one point of S, whereas the circles on the right do not.  The transition from the triangulation on the left to that on the right is called an edge flip, and is the basic operation of constructing a two-dimensional Delaunay triangulation.  Face flipping is the analogous procedure for five points in three dimensions.
+   </caption></figure>
+
+  The Delaunay triangulation of a point set is usually calculated by an incremental flip algorithm as follows:
+<list id="delaunayalgorithm">
+<item>The points of S are sorted on one coordinate (x, y, or z).  This step is not strictly necessary but makes the algorithm run faster than if the points were in arbitrary order.</item>
+<item>Each point is added in sorted order.  Upon adding a point:
+<list id="DelaunaySubAlgorithm">
+<item>The point is connected to previously added points that are "visible" to it, that is, to points to which it can be connected by a line segment without passing through a face of a tetrahedron.</item>
+<item>Any new tetrhedra formed are checked and flipped if necessary.</item>
+<item>Any tetrahedra adjacent to flipped tetrahedra are checked and flipped.  This continues until further flipping is unnecessary, which is guaranteed to occur</item>
+</list></item></list>
+
+This algorithm runs in worst case <code display="inline"> O(n^2)</code> time, but expected <code display="inline"> O(n^(3/2))</code> time.  Without the sort in the first step, the expected case would be <code display="inline">O(n log n)</code>. A full description and analysis of Delaunay triangulation algorithms is given in <cite target-id="compgeom"><cite-title>[1]</cite-title></cite>, chapter 9.</para>
+ 
+  <para id="delaunay_triangulation_para2">From the Delaunay triangulation the α-shape is computed by removing
+  all edges, triangles, and tetrahedra that have circumscribing spheres with
+  radius greater than α.  Formally, the <term>α-complex</term> is the part of the Delaunay triangulation that remains after removing edges longer than α.  The <term>α-shape</term> is the boundary of the α-complex.</para>
+  
+  <para id="element-457">Pockets <cite target-id="EdelsbrunnerFacello98"/> can be detected by comparing the α-shape to the whole Delauney triangulation.  Missing tetrahedra represent indentations, concavity, and generally negative space in the overall volume occupied by the protein.  Particularly large or deep pockets may indicate a substrate binding site.</para>
+
+  </section>
+
+  <section id="WeightedAlphaShapes">
+  <title> Weighted Alpha Shapes </title>
+  <para id="weighted_alpha_para1">Regular α-shapes can be extended to deal with varying weights (i.e.,
+  spheres with different radii, such as different types of atoms) <cite target-id="LiangEdelsbrunner98"/>. The formal definitions become complicated,
+  but the key idea is to use a pseudo distance measure that uses the weights.
+  Suppose we have two atoms at positions p1 and p2 with weights w1 and w2.
+  Then the pseudo distance is defined as  the square of the Euclidean distance minus the weights. The pseudo distance
+  is zero if and only if two spheres centered at p1 and p2 with radii equal
+  to <code display="inline"> sqrt(w1)</code> and <code display="inline"> 
+  sqrt(w2)</code> are just touching.
+
+  <figure id="alpha_rel2"><media id="idp1494928" alt=""><image src="../../media/alpha_relation2.png" mime-type="image/png"/></media>
+    <caption> Pseudo distance to account for atoms of different sizes. </caption>
+  </figure>
+
+
+  </para>
+  </section></section>
+<section id="VolumeCalculation">
+<title>Calculating Molecular Volume Using α-Shapes</title>
+<para id="element-25">The volume of a molecule can be approximated using the space-filling model, in which each atom is modeled as a ball whose radius is α, where α is selected depending on the model being used: Van der Waals surface, molecular surface, solvent accessible surface, etc.  Unfortunately, calculating the volume is not as simple as taking the sum of the ball volumes because they may overlap.  Calculating the volume of a complex of overlapping balls is non-trivial because of the overlaps.  If two spheres overlap, the volume is the sum of the volumes of the spheres minus the volume of the overlap, which was counted twice.  If three overlap, the volume is the sum of the ball volumes, minus the volume of each pairwise overlap, plus the volume of the three-way overlap, which was subtracted one too many times in accounting for the pairwise overlaps.  In the general case, all pairwise, three-way, four-way and so on to n-way intersections (assuming there are n atoms) must be considered.  Proteins generally have thousands or tens of thousands of atoms, so the general n-way case may be computationally expensive and may introduce numerical error.
+
+  <figure id="circles"><media id="idp2087168" alt=""><image src="../../media/circles.jpg" mime-type="image/jpeg"/></media>
+    <caption> Three overlapping discs (balls if three dimensional).  Calculating the total area (volume if three dimensional) of the balls requires summing the areas of each ball, then subtracting out the pairwise intersection areas, since each was counted once for each ball it is inside.  Then the intersection area  of the three balls must be added back because, although it was added three times initially, it was also subtracted once in each of the three pairwise intersections.  In the general case, with n balls, all of which may overlap, intersections of odd numbers of balls are added, and intersections of even numbers of balls subtracted, to calculate the total area or volume.</caption>
+  </figure>
+</para><para id="element-20">α-shapes provide a way around this undesirable combinatorial complexity <cite target-id="LiangEdelsbrunner98"/>, and this issue has been one of the motivating factors for introducing α-shapes.  To calculate the volume of a protein, we take the sum of all ball volumes, then subtract only those pairwise intersections for which a corresponding edge exists in the α-complex.  Only those three-way intersections for which the corresponding triangle is in the α-complex must then be added back.  Finally, only four-way intersections corresponding to tetrahedra in the α-complex need to be subtracted.  No higher-order intersections are necessary, and the number of volume calculations necessary corresponds directly to the complexity of the α-complex, which is O(n log n) in the number of atoms.  
+
+
+<!-- Computing the volume and surface of the solvent accessible surface or the
+  molecular surface has the same computational complexity as computing the
+  volume and surface of the alpha shape. However, the computations are more
+  involved, because we need to compute intersections between spheres and make
+  sure we do not count any volume or area more than once.
+
+   <figure id="sasa_computation">
+   <name> Computing SASA from MS </name>
+   <media type="image/png" src="sa-ms2.png">
+   </media>
+   <caption> SASA can be computed from the molecular surface by growing each 
+             atom with the radius of the solvent ball. 
+   </caption>
+   </figure>  
+--></para><para id="element-111">An example of how this approach works is given on page 4 of the <link url="http://www3.interscience.wiley.com/cgi-bin/abstract/36315/ABSTRACT">Liang et al. article</link> in the Recommended Reading section below.  A proof of correctness and derivation is also provided in the article.  Surface area calculations, such as solvent-accessible surface area, which is often used to estimate the strength of interactions between a protein and the solvent molecules surrounding it, are made by a similar use of the α-complex.</para><para id="element-215"><title> Recommended Reading </title>
+ <list id="PDFs"><item>H. Edelsbrunner, D. Kirkpatrick, and R. Seidel.  <link url="http://ieeexplore.ieee.org/iel5/18/22733/01056714.pdf">[PDF]</link>. "On the Shape of a Set of Points in the Plane."  IEEE Transactions on Information Theory, 29(4):551-559, 1983.  This is the original α-shapes paper (caution: the definition of α is different from that used in later papers--it is the negative reciprocal of α as presented above).  </item>
+
+<item>H. Edelsbrunner and E.P. Mucke. <link url="http://portal.acm.org/citation.cfm?id=156635">[PDF]</link>. "Three-dimensional Alpha Shapes."  Workshop on Volume Visualization, Boston, MA. pp 75-82. 1992.  This article shows how to extend α-shapes to three-dimensional point sets. </item>
+
+<item>J. Liang, H. Edelsbrunner, P. Fu, P.V. Sudhakar, and S. Subramaniam. <link url="http://www3.interscience.wiley.com/cgi-bin/abstract/36315/ABSTRACT"> [PDF] </link>. Analytical shape computation of macromolecules: I. molecular area and volume through alpha shape. Proteins: Structure, Function, and Genetics, 33:1-17, 1998.  This is a paper on using α-shapes to speed up volume and surface area calculations for molecular models. </item>
+
+ <item>H. Edelsbrunner, M.Facello and Jie Liang.  <link url="http://dx.doi.org/10.1016/S0166-218X(98)00067-5"> [PDF] </link>.  On the definition and the construction of pockets in macromolecules.  Discrete and Applied Mathematics, 88:83-102, 1998.
+ </item></list></para>
+  </section>
+
+ <section id="Software">
+ <title> Software </title>
+ <para id="software_para">
+ <list id="alpha_software"><item> <link url="http://cgm.cs.mcgill.ca/~godfried/teaching/projects97/belair/alpha.html">An α-shapes applet.</link>  This applet lets you display α-shapes, Voronoi diagrams, and Delauney triangulations for arbitrary point sets and variable α (use the slider at the bottom).  Be cautioned that this applet uses the original definition of α, which is -1/α as we defined α above for three-dimensional point sets.</item>
+
+<item> <link url="http://biogeometry.duke.edu/software/alphashapes/software.html"> Alpha shape software </link> </item>
+
+ <item> <link url="http://www.cs.cornell.edu/Info/People/chew/Delaunay.html">   
+        Delaunay triangulation applet </link>
+ </item>
+
+<item> <link url="http://nook.cs.ucdavis.edu:8080/~koehl/ProShape/surface_example.html">A small example showing how α-shapes can be used to identify pockets.</link></item>
+
+ <item> <link url="http://www.cgal.org/"> Computational geometry software (CGAL)</link>, which includes demo programs for alpha shapes, Delaunay
+triangulations, etc.
+ </item>
+
+ <item> <link url="http://www.chemcomp.com/Journal_of_CCG/Features/sitefind.htm"> Locating binding sites in protein structures (including use of α-shapes).</link>
+ </item></list>
+
+ </para>
+ </section>
+
+ </content>
+  
+ <bib:file>
+     <bib:entry id="compgeom">
+       <bib:book>
+         <bib:author>de Berg, M. and van Krefeld, M. and Overmars, M. and Schwarzkopf, O.</bib:author>
+         <bib:title>Computational Geometry: Algorithms and Applications</bib:title>
+         <bib:publisher>Springer</bib:publisher>
+         <bib:year>2000</bib:year>
+         <bib:edition>Second</bib:edition>
+       </bib:book>
+     </bib:entry>
+
+            <bib:entry id="LiangEdelsbrunner98">
+		<bib:article>
+		  <bib:author> J. Liang and H. Edelsbrunner and P. Fu and P.V. Sudhakar and S. Subramaniam </bib:author>
+		  <bib:title>  Analytical shape computation of macromolecules: I. molecular area and volume
+through alpha shape
+                  </bib:title> 
+		  <bib:journal> Proteins: Structure, Function, and Genetics </bib:journal>
+		  <bib:year>1998</bib:year>
+                  <bib:volume> 33 </bib:volume>
+		  <bib:pages> 1-17 </bib:pages>
+                  <bib:note> 
+http://www3.interscience.wiley.com/cgi-bin/abstract/36315/ABSTRACT
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+            <bib:entry id="EdelsbrunnerFacello98">
+		<bib:article>
+		  <bib:author> H. Edelsbrunner and M.Facello and Jie Liang </bib:author>
+		  <bib:title>  On the definition and the
+construction of pockets in macromolecules
+                  </bib:title>
+		  <bib:journal> Discrete and Applied Mathematics </bib:journal>
+		  <bib:year>1998</bib:year>
+                  <bib:volume> 88 </bib:volume>
+		  <bib:pages> 83-102 </bib:pages>
+                  <bib:note> http://dx.doi.org/10.1016/S0166-218X(98)00067-5
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+             <bib:entry id="EdelsbrunnerMucke94">
+		<bib:article>
+		  <bib:author> H. Edelsbrunner and E. P. Mücke </bib:author>
+		  <bib:title> Three-Dimensional Alpha-Shapes 
+                  </bib:title>
+		  <bib:journal> ACM Transaction on Graphics </bib:journal>
+		  <bib:year> 1994 </bib:year>
+                  <bib:volume> 13 </bib:volume>
+		  <bib:pages> 43-72 </bib:pages>
+                  <bib:note> http://portal.acm.org/citation.cfm?id=156635
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+             <bib:entry id="Weisstein1">
+		<bib:article>
+		  <bib:author> E. W. Weisstein</bib:author>
+		  <bib:title> Circle-Circle Intersection 
+                  </bib:title>
+		  <bib:journal> MathWorld </bib:journal>
+		  <bib:year> 2005 </bib:year>
+                  <bib:note> http://mathworld.wolfram.com/Circle-CircleIntersection.html
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+             <bib:entry id="Weisstein2">
+		<bib:article>
+		  <bib:author> E. W. Weisstein</bib:author>
+		  <bib:title> Sphere-Sphere Intersection 
+                  </bib:title>
+		  <bib:journal> MathWorld </bib:journal>
+		  <bib:year> 2005 </bib:year>
+                  <bib:note> http://mathworld.wolfram.com/Sphere-SphereIntersection.html
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+             <bib:entry id="Weisstein3">
+		<bib:article>
+		  <bib:author> E. W. Weisstein </bib:author>
+		  <bib:title> Cayley-Menger Determinant 
+                  </bib:title>
+		  <bib:journal> MathWorld </bib:journal>
+		  <bib:year> 2005 </bib:year>
+                  <bib:note> http://mathworld.wolfram.com/Cayley-MengerDeterminant.html
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+
+ </bib:file>
+</document>

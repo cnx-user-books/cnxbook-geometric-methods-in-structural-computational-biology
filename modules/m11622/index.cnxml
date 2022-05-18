@@ -1,0 +1,365 @@
+<document xmlns="http://cnx.rice.edu/cnxml" xmlns:m="http://www.w3.org/1998/Math/MathML" xmlns:md="http://cnx.rice.edu/mdml" xmlns:bib="http://bibtexml.sf.net/">
+  <title>Protein Classification, Local Alignment, and Motifs</title>
+  <metadata><md:content-id>undefined</md:content-id><md:title/><md:uuid>8533978c-beab-41b3-9e4e-6843cea98001</md:uuid>
+</metadata>
+
+  <content>
+
+ <para id="element-998"><list id="topicsList"><title> Topics in this Module </title>
+<item><link target-id="MolecularDistanceApplications">Applications of Molecular Distance Measures</link>
+<list id="alphashapetopics">
+          <item><link target-id="ProteinClassification"> Protein Classification </link>  </item>
+          <item><link target-id="ProteinAlignment">Protein Alignment</link></item>
+   </list></item>
+<item> <link target-id="LocalMatching"> Local Matching: Geometric Hashing, Pose Clustering, and Match Augmentation</link> </item></list></para>
+
+<para id="element-529">In a <link document="m11608">previous module</link>, the topic of comparing and quantifying the distance between different conformations of a given molecule was explored. Structure-based comparison is also of interest for distinct proteins, which lack the atom-by-atom correspondence necessary for RMSD calculations.  In this case, an alignment is performed either based on amino acid sequence or on three-dimensional structure, and the subset of atoms successfully aligned are used as the basis for calculating conformational distance.  Computing distances among entire proteins by doing a global alignment of their structures is useful for protein classification.</para><section id="MolecularDistanceApplications">
+<title>Protein Classification</title>
+<para id="class1">Protein classification is motivated by the notion of "descriptive biology".  When faced with tremendous amounts of highly complex data, such as with the set of all proteins, one way to understand the data is by classification: the act of associating or grouping proteins into classes using certain criteria.  One such criterion is protein sequence identity, where sequential similarity led to the development of phylogenetic trees and multiple sequence analyses.  The same is done in protein structure classification, where the effort is to identify groups of similar proteins, with the hope that this will yield information about their biochemical function and biological purpose.</para>
+
+<para id="mda-1">Proteins are classified by simultaneously applying a number of criteria, including sequence homology (evolutionary relatedness), function, folding motifs, structural features, and so on.  The resulting hierarchies and clusters of protein structures provide a notion of the distance between two proteins and their structures.  A couple of popular classification schemes are linked below.  Note that a fair amount of manual annotation and classification was necessary to build these systems.</para>
+
+<section id="ProteinAlignment">
+<title> Protein Alignment </title>
+
+<para id="element-690">The core computational problem of protein classification, using sequence or structure, is the problem of comparing two proteins.  For structural classification, one method for comparison is <term>structural alignment</term>, which identifies an ideal superimposition between two protein structures, in order to compare them.  </para>
+
+<para id="element-70">SSAP, Dali, Foldminer, Lock, and Geometric Hashing <cite target-id="WolfsonRigousos"/> are algorithms which have been designed in part to align whole protein structures.  Despite differences in algorithmic approach, all of these algorithms essentially evolved from the need to assign the best possible correlation between points in one structure and points in another.  The problem of finding the optimal alignment is polynomial in the number of atoms in biological data, where we are assured that atoms cannot fall within a certain distance to each other (Van der Waals forces enforce this), but without this constraint the problem is exponential.</para>
+
+<para id="ProteinAlignmentPara1">
+Protein alignment has been used for the classification and comparison of proteins in many existing algorithms.  These include:
+
+<list id="alignmentList"><item> <link url="http://www.ebi.ac.uk/dali"> Dali </link> is a structural comparison algorithm based on pairwise distance matrices.  Dali uses patterns of residue contacts, similar to contact maps described above in the intramolecular distances section, in order to align structures.  The alignments are found using a randomized (Monte Carlo) search.</item>
+
+<item> <link url="http://dlb3.stanford.edu/"> FoldMiner and LOCK 2</link>.  FoldMiner finds protein structures similar to an input structure by performing alignment the query structures secondary structure elements with proteins in its database using the LOCK 2 algorithm.  LOCK 2 uses a combination of geometric hashing <cite target-id="WolfsonRigousos"/> and dynamic programming to optimize the alignments of secondary structure elements of different proteins.  Once a set of alignments to similar structures are found, motifs consisting of similar secondary structure arrangements are constructed and used to refine the similarity search.</item> 
+
+<item> <link url="http://www.cathdb.info/cgi-bin/cath/GetSsapRasmol.pl"> Sequential Structure Alignment Program (SSAP) </link> Given two protein structures, SSAP returns a structural alignment. </item> 
+</list>
+</para>
+</section>
+
+
+<section id="ProteinClassification">
+<title> Protein Classification </title>
+
+<para id="element-953">Once alignment algorithms have been implemented, it is possible to explore different classifications of proteins.  Naturally, it would be intuitive to classify proteins solely according to their structure, but much richer data is available as well.  Current classifications of proteins integrate sequence and structure information in order to maximize their utility.  These include the following:
+
+<list id="classificationList"><item> 
+<link url="http://scop.berkeley.edu"> SCOP (Structural Classification of Protein)</link> 
+is a database of all proteins whose structures have been determined, organized by family (evolutionary relationship), superfamily (structural and functional similarity), and fold (similar secondary structure, with similar arrangement and topological connections).  SCOP was constructed largely by manual inspection and annotation.</item>
+<item> 
+<link url="http://www.biochem.ucl.ac.uk"> CATH Protein Structure Classification</link> is another database of protein structures, organized by Class (secondary structure content), Architecture (orientation of secondary structures), Topology (overall shape and connectivity), and Homologous Superfamily (evolutionary relationship inferred based on sequence and structure similarity).  CATH uses SSAP (the Sequential Structural Alignment Program, a secondary structure element-based method) for structural comparison.</item>
+</list>
+
+</para>
+
+</section>
+
+
+<para id="element-777">The biological purpose of designing Global Stuructural Alignment algorithms was the identification, classification, and ultimately prediction, of protein function, under the hypothesis that protein structure dictates protein function.  Simultaneously, it was realized that small changes to proteins could lead to massive changes in function, or nothing at all.  This suggested that global alignment and global structure comparison (as well as global sequence alignment and global sequence comparison) should not be the only tools used for function prediction.</para><para id="element-33">In particular, it was realized that active sites, clusterings of amino acids on the surface of proteins and a tiny minority of the entire protein, were often strongly related to protein function.  In a continuation of the effort to predict protein function through structural comparison, algorithms were developed to compare functionally relevant substructures of proteins.  We refer to these algorithms collectively as local structure alignment algorithms.</para>
+
+</section>
+
+
+
+
+
+<section id="LocalMatching">
+<title>Local Matching: Geometric Hashing, Pose Clustering and Match Augmentation</title>
+
+<para id="element-959">Algorithms for local structure alignment address the similar computational problem of selecting a correspondence between a <emphasis>motif</emphasis>, a tiny substructure of a protein, often between 3 and 20 amino acids, and a <emphasis>target</emphasis>, a full protein structure.  Once a correspondence has been established, the "distance" of the motif to the identified part of the target is measured using lRMSD.</para>
+
+<figure id="element-213"><media id="idp1103904" alt=""><image src="../../media/MatchingPic.jpg" mime-type="image/jpeg" height="350"/></media>
+</figure><para id="element-41">Some algorithms for local structure alignment are based on pattern matching algorithms.  Pattern matching algorithms seek target substructures called matches which have maximal geometric similarity to the motif.  An excellent example of this type of algorithm is Geometric Hashing <cite target-id="WolfsonRigousos"/>, a very flexible framework for geometric pattern matching under noisy constraints.  Geometric Hashing <cite target-id="WolfsonRigousos"/>, has been adapted to alignment by atom position <cite target-id="BacharWolfsonNussinov93"/>, by backbone C-alpha <cite target-id="verbitsky99"/>, multiple structural alignment <cite target-id="leibowitz01b"/>, and alignment of hinge-bending and flexible protein models <cite target-id="verbitsky99"/>.  Other algorithms for substructural alignment include JESS <cite target-id="BarkerThornton03"/>, PINTS <cite target-id="StarkRussell03"/>, webFEATURE <cite target-id="LiangAltman03"/>, and pvSOAR <cite target-id="BinkowskiLiang03"/>.  The description below concentrates on the work developed in <cite target-id="ChenKavraki05"/>.</para>
+
+<section id="element-826">
+<title>Motifs</title>
+
+<para id="element-677">A motif S is a set of m points <m:math><m:ci><m:msub><m:mi>s</m:mi><m:mn>1</m:mn></m:msub></m:ci></m:math>, ..., <m:math><m:ci><m:msub><m:mi>s</m:mi><m:mn>m</m:mn></m:msub></m:ci></m:math>
+ in three dimensions, whose coordinates are taken from backbone and side-chain atoms.  Each <emphasis>motif point</emphasis> <m:math><m:ci><m:msub><m:mi>s</m:mi><m:mn>i</m:mn></m:msub></m:ci></m:math> in the motif has an associated <emphasis>rank</emphasis> <m:math><m:apply><m:ci type="fn">p</m:ci><m:msub><m:mi>s</m:mi><m:mn>i</m:mn></m:msub></m:apply></m:math>
+, a measure of the functional significance of the motif point.  Each <m:math><m:ci><m:msub><m:mi>s</m:mi><m:mn>i</m:mn></m:msub></m:ci></m:math> also has a set of alternate amino acid <emphasis>labels</emphasis> <m:math><m:apply><m:ci type="fn">l</m:ci><m:msub><m:mi>s</m:mi><m:mn>i</m:mn></m:msub></m:apply></m:math>
+ in {GLY, ALA, ...}, which represent residues this amino acid has mutated to during evolution.  Labels permit our motifs to simultaneously represent many homologous active sites with slight mutations, not just a single active site.  In this paper, we obtain labels and ranks using Evolutionary Trace (ET) <cite target-id="LichtargeCohen96"/>,<cite target-id="LichtargeCohen97"/>.
+</para>
+
+<para id="element-796">Other motifs have been designed with other approaches.  Motifs have been composed of points on the Connolly surface  <cite target-id="Connolly83"/> representing electrostatic potentials  <cite target-id="Kinoshita03"/>, of hinge-bending sets of points in space  <cite target-id="ShatskyWolfson04"/>, of sets of "pseudo-centers" representing protein-ligand interactions  <cite target-id="ShatskyWolfson05"/>, or of points taken from atom coordinates with evolutionary data  <cite target-id="ChenKavraki05"/>, <cite target-id="LichtargeCohen96"/>, to name a few.  Depending on how motif points are defined, they have different labels associated with them and these labels need to be taken into account when comparing motifs. 
+</para>
+</section>
+
+<section id="element-831">
+<title>Protein Function Prediction</title>
+
+<para id="element-11">Local structure comparison algorithms mainly target the biological problem of Protein Function Prediction.  Ideally, a function prediction pipeline should address the following subproblems:</para>
+
+<list id="element-303"><item> The design of effective motifs</item> 
+<item> The efficient identification of matches</item> 
+<item> The effective filtering of matches</item> 
+</list>
+
+<para id="element-790">Suppose for a moment that we have hand-designed motifs.  In the next section, we concentrate on an efficient algorithm for local structure comparison.</para>
+</section>
+
+<section id="element-524">
+<title>Identification of Matches</title>
+
+<para id="element-665">Many such algorithms exist, but differ fundamentally in that they are optimized for comparing different types of motifs. There are algorithms for comparing graph-based motifs  <cite target-id="artymuik94"/>, algorithms for finding catalytic sites  <cite target-id="BarkerThornton03"/>, and the seminal Geometric Hashing framework  <cite target-id="WolfsonRigousos"/> which can search for many types of motifs, including motifs based on atom position  <cite target-id="BacharWolfsonNussinov93"/>, points on Connolly face centers  <cite target-id="RosenWolfsonNussinov98"/>, catalytic triads  <cite target-id="wallace96"/>, and flexible protein models  <cite target-id="ShatskyWolfson04"/>.  <term>Match Augmentation</term> (MA)  <cite target-id="ChenKavraki05"/> is described below.  
+</para>
+
+
+
+<para id="element-44"><media id="idm4649264" alt=""><image src="../../media/cnx.jpg" mime-type="image/jpeg" height="380"/></media>
+</para>
+</section>
+
+<section id="element-875"><title>Match Augmentation</title>
+
+<para id="element-319">Rank information prioritizes motif data and MA was designed in a prioritized fashion, where correspondences with higher ranked points are identified first.  MA is composed of two parts: <emphasis>Seed Matching</emphasis> and <emphasis>Augmentation</emphasis>.  The purpose of Seed Matching is to identify a match for the <emphasis>seed</emphasis> S' = {<m:math><m:ci><m:msub><m:mi>s</m:mi><m:mn>1</m:mn></m:msub></m:ci></m:math>,<m:math><m:ci><m:msub><m:mi>s</m:mi><m:mn>2</m:mn></m:msub></m:ci></m:math>,<m:math><m:ci><m:msub><m:mi>s</m:mi><m:mn>3</m:mn></m:msub></m:ci></m:math>}, the three highest ranked motif points.  The k lowest lRMSD <emphasis>seed matches</emphasis> are passed to Augmentation to be iteratively expanded into matches for the remaining motif points, in descending rank order.  Augmentation outputs the match with smallest lRMSD.</para>
+
+<section id="element-505"><title>Seed Matching</title>
+
+<para id="seedMatch">Seed Matching identifies all sets of 3 target points T' = {<m:math><m:ci><m:msub><m:mi>t</m:mi><m:mn>A</m:mn></m:msub></m:ci></m:math>,<m:math><m:ci><m:msub><m:mi>t</m:mi><m:mn>B</m:mn></m:msub></m:ci></m:math>,<m:math><m:ci><m:msub><m:mi>t</m:mi><m:mn>C</m:mn></m:msub></m:ci></m:math>} which fulfill our matching criteria with the highest ranked 3 motif points, S'= {<m:math><m:ci><m:msub><m:mi>s</m:mi><m:mn>1</m:mn></m:msub></m:ci></m:math>,<m:math><m:ci><m:msub><m:mi>s</m:mi><m:mn>2</m:mn></m:msub></m:ci></m:math>,<m:math><m:ci><m:msub><m:mi>s</m:mi><m:mn>3</m:mn></m:msub></m:ci></m:math>
+}.  In this stage, we represent the target as a geometric graph with colored edges.  There are exactly three unordered pairs of points in S', and we name them red, blue and green.  In the target, if any pair of target points <m:math><m:ci><m:msub><m:mi>t</m:mi><m:mn>i</m:mn></m:msub></m:ci></m:math>,<m:math><m:ci><m:msub><m:mi>t</m:mi><m:mn>j</m:mn></m:msub></m:ci></m:math> fulfills our first two criteria with either red, blue or green, we draw a corresponding red blue or green edge between <m:math><m:ci><m:msub><m:mi>t</m:mi><m:mn>i</m:mn></m:msub></m:ci></m:math>,<m:math><m:ci><m:msub><m:mi>t</m:mi><m:mn>j</m:mn></m:msub></m:ci></m:math> in the target.  Once we have processed all pairs of target points, we find all three-colored triangles in T.  These are the Seed Matches, a set of three-point correlations to S' that we sort by lRMSD and pass to Augmentation.
+</para>
+</section>
+
+<section id="element-727"><title>Augmentation</title>
+
+<para id="Augmentation">Augmentation is an application of depth first search that begins with the list of seed matches.  Assuming that there are more than four motif points, we must find correspondences for the unmatched motif points within the target.  Interpret the list of seed matches as a stack of partially complete matches.  Pop off the first match, and considering the lRMSD alignment of this match, plot the position p of the next unmatched motif point <m:math><m:ci><m:msub><m:mi>s</m:mi><m:mn>i</m:mn></m:msub></m:ci></m:math> relative to the aligned orientation of the motif.  In the spherical region V around p, identify all target points <m:math><m:ci><m:msub><m:mi>t</m:mi><m:mn>i</m:mn></m:msub></m:ci></m:math>, compatible with <m:math><m:ci><m:msub><m:mi>s</m:mi><m:mn>i</m:mn></m:msub></m:ci></m:math>, inside V.  Now compute the lRMSD alignment of all correlated points, include the new correlation (<m:math><m:ci><m:msub><m:mi>s</m:mi><m:mn>i</m:mn></m:msub></m:ci></m:math>, <m:math><m:ci><m:msub><m:mi>t</m:mi><m:mn>i</m:mn></m:msub></m:ci></m:math>).  If the new alignment satisfies our first two criteria and there are no more unmatched motif points, put this match into a heap which maintains the match with smallest lRMSD.  If there are more unmatched motif points, put this partial match back onto the stack.  Continue to test correlations in this manner, until V contains no more target points that satisfy our criteria.  Then, return to the stack, and begin again by popping off the first match on the stack, repeating this process until the stack is empty.</para>
+</section>
+</section>
+
+
+
+<section id="matchFilter">
+<title>Filtering Matches</title>
+
+<para id="element-151">Structural similarity is important to functional annotation only if a strong correlation exists between identifiably significant structural similarity and functional similarity.  However, the existence of a match alone does not guarantee functional similarity.  lRMSD can be a differentiating factor. If matches of homologous proteins represent statistically significant structural similarity over what is expected by random chance, we could differentiate on lRMSD, as long as we can evaluate the statistical significance of the lRMSD of a match.  
+</para>
+
+<para id="element-283">BLAST <cite target-id="AltschulLipman97"/> first calculated the statistical significance of sequence matches with a combinatorial model of the space of similar sequences. Determining the statistical significance of structural matches has also been attempted. Modeling was applied for the PINTS database <cite target-id="StarkRussell03"/> to estimate the probability of a structural match given a particular LRMSD.  An artificial distribution was parameterized by motif size and amino acid composition in order to fit a given data set, and the p-value is calculated relative to that distribution. Another approach was taken in the algorithm JESS <cite target-id="BarkerThornton03"/>, using comparative analysis to generate a significance score relative to a specific population of known motifs. Both methods have some disadvantages. The artificial models of PINTS are not parameterized by the geometry of motifs, and, all else equal, produce identical distributions for motifs of different geometry. JESS, on the other hand, is dependent on a set of known motifs; should this set change, all significance scores would have to be revised. 
+</para>
+
+<para id="element-332">Local structural alignment methods operate on the assumption that local structural and chemical similarity implies functional similarity.  A statistical model has been developed that can be used to identify the degree of similarity sufficient to follow this implication.  Given a match m with lRMSD r between motif S and target T, exactly one of two hypotheses must hold:
+
+<list id="element-448"><item><m:math><m:ci><m:msub><m:mi>H</m:mi><m:mn>0</m:mn></m:msub></m:ci></m:math>: S and T are structurally dissimilar </item>
+		<item><m:math><m:ci><m:msub><m:mi>H</m:mi><m:mn>A</m:mn></m:msub></m:ci></m:math>: S and T are structurally similar </item>
+	</list>
+
+The proposed statistical model implements this measurement by computing a <term>motif profile</term>.  Motif profiles are frequency distributions (see Figure below) of match lRMSDs between S and the entire Protein Data Bank (PDB) [<link url="http://www.pdb.org">site</link>], which is essentially a large set of functionally unrelated proteins.  A motif profile is essentially a histogram, where the vertical axis measures the number of matches at each specific lRMSD, which is measured on the horizontal axis.  Motif profiles provide very complete information about matches typical of <m:math><m:ci><m:msub><m:mi>H</m:mi><m:mn>0</m:mn></m:msub></m:ci></m:math>.  If we suspect that a match m has lRMSD r indicative of functional similarity, we can use the motif profile to determine the probability p of observing another match m' with smaller lRMSD by computing the volume under the curve to the left of r, relative to the entire volume.  The probability p, often referred to as the p-value, is the measure of statistical significance.  With a standard of statistical significance alpha, if p is less than alpha, then we say that the probability of observing a match m' with lRMSD r' less than r is so low that we reject the null hypothesis in favor of the alternative hypothesis.  This process means that if a match m with lRMSD r has a p-value exactly equal to alpha, then this lRMSD is the highest lRMSD for which our statistical model predicts that m identifies structural and chemical similarity sufficient to imply functional similarity.  Matches with this property are considered to be statistically significant.
+</para>
+</section>
+
+<para id="element-825"><figure id="motifprofile"><media id="idm5371680" alt=""><image src="../../media/PvalueCalc.jpg" mime-type="image/jpeg" height="250"/></media>
+
+<caption>The use of motif profiles.</caption></figure></para><section id="EffectiveMotifs"><title>Designing Effective Motifs</title>
+
+<para id="element-406">Given a motif representing a specific biochemical function, the task of any algorithm seeking to predict protein functions is to identify other proteins with similar biological functions.  This is immediately affected by how well the motif represents the biological function - protein structures are flexible, dynamic objects, and any computational representation of these objects is likely to be inaccurate in some manner.  In particular, since it is the computational representation that is compared, the fidelity of representation is essential for the effectiveness of the structural comparison approach.</para>
+ 
+<para id="element-110">
+An effective motif must simultaneously fulfill two criteria: </para>
+
+<list id="effecMotifs">
+<item> The motif must be sensitive</item>
+<item> The motif must be specific</item>
+</list>
+
+<para id="element-832">Motifs must maintain geometric and chemical similarity, in respect to the characteristics compared by the comparison algorithm, to functional homologs.  This ensures that algorithms searching for the motif identify proteins with similar function.</para>
+ 
+<para id="sensPara2">
+Sensitivity is measured as the proportion of acceptable matches to functional homologs relative to the total number of functional homologs.  Specific motifs must maintain geometric and chemical dissimilarity, in respect to the characteristics  compared by the comparison algorithm, to functionally unrelated proteins.  This ensures that algorithms searching for the motif accidentally identify less matches to functionally unrelated proteins.  Specificity is measured as the proportion of rejected matches to functionally unrelated proteins, relative to all functionally unrelated proteins.  The ideally effective motif is 100%  sensitive and 100% specific.</para>
+
+ <para id="effecMotifs2">Under most conditions, effective motifs have been designed by hand.  However, a few recently studies exist which examine the relationship between elements of the motif and the sensitivity and specificity of the motif.  These studies resulted in the design of MultiBind <cite target-id="ShatskyWolfson05"/>, an algorithm which identifies conserved binding patterns among functionally homologous active sites, in order to generate motifs which represent only conserved binding patterns.  Another study of motif design produced Geometric Sieving <cite target-id="ChenKavraki06"/>, an algorithm for maximizing the Geometric Uniqueness of motifs from functionally unrelated proteins.</para><para id="element-534">Putting together effective motif design, an efficient matching algorithm, and a statistical scoring of the results can lead to an automated functional annotation pipeline for proteins.</para>
+</section>
+</section><para id="element-43"><title>Recommended Reading:</title>
+
+<list id="alignment_references"><item>Chen, B.Y. (2005). <link url="http://helix-web.stanford.edu/psb05/chen-b.pdf">Algorithms for Structural Comparison and Statistical Analysis of 3D Protein Motifs</link>. Proceedings of the Pacific Symposium on Biocomputing 2005, pp. 334-345.</item>
+	<item> Chen, B.Y. (2006). <link url="http://www.cs.rice.edu/~brianyc/papers/pdfs/recomb2006.pdf">Geometric Sieving: Automated Distributed Optimization of 3D Motifs for Protein Function Prediction</link>. Proceedings of the Tenth Annual Conference on Research in Computational Molecular Biology (RECOMB 2006), pp. 500-512.</item>
+	<item> Yao, H., Kristensen, D., Mihalek, I., Sowa, M., Shaw, Ch., Kimmel, M., Kavraki, L. E., and Lichtarge, O. (2003). <link url="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=PubMed&amp;list_uids=12547207&amp;dopt=Abstract">An Accurate,  Sensitive, and Scalable Method to Identify Functional Sites in Protein Structures</link>. Journal of Molecular Biology, 325:255-261.</item>
+	<item> David M. Kristensen, Brian Y. Chen, Viacheslav Y. Fofanov, R. Matthew Ward, A. Martin Lisewski, Marek Kimmel, Lydia E. Kavraki, and Olivier Lichtarge. (2006). <link url="http://www.proteinscience.org/cgi/content/abstract/15/6/1530?ck=nck">Recurrent Use of Evolutionary Importance for Functional Annotation of Proteins Based on Local Structural Similarity</link>. Protein Science, in press.</item>
+
+
+</list></para>
+  </content>
+ <bib:file>
+	<bib:entry id="WolfsonRigousos"><bib:article>
+		<bib:author>      Wolfson H.J. and Rigoutsos I.							</bib:author>
+		<bib:title>       Geometric Hashing: An Overview						</bib:title>
+		<bib:journal>     IEEE Comp. Sci. Eng.								</bib:journal>
+		<bib:year>        1997										</bib:year>
+		<bib:volume>      4										</bib:volume>
+		<bib:pages>       10-21										</bib:pages>
+	</bib:article></bib:entry>
+
+	<bib:entry id="BacharWolfsonNussinov93"><bib:article>
+		<bib:author>      Bachar O. et. al.											</bib:author>  
+		<bib:title>       A computer vision based technique for 3-D sequence independent structural comparison of proteins      </bib:title>   
+		<bib:journal>     Prot. Eng.                                                                                            </bib:journal> 
+		<bib:year>        1993                                                                                                 </bib:year>    
+		<bib:volume>      6                                                                                                     </bib:volume>  
+		<bib:pages>       279-288                                                                                               </bib:pages>   
+	</bib:article></bib:entry>
+
+	<bib:entry id="verbitsky99"><bib:article>
+		<bib:author>      Verbitsky G. and Nussinov R. and Wolfson H.J.          			</bib:author>  
+		<bib:title>       Structural comparison allowing hinge bending                                  </bib:title>   
+		<bib:journal>     Prot: Struct. Funct. Genet.                                                   </bib:journal> 
+		<bib:year>        1999                                                                         </bib:year>    
+		<bib:volume>      34(2)                                                                         </bib:volume>  
+		<bib:pages>       232-254                                                                       </bib:pages>   
+	</bib:article></bib:entry>
+	
+	<bib:entry id="leibowitz01b"><bib:article>
+		<bib:author>       Liebowitz N. et. al.									</bib:author>  
+		<bib:title>        Automated Multiple Structure Alignment and Detection of a Common Substructural Motif </bib:title>   
+		<bib:journal>      Prot: Struct. Func. Genet.                                                           </bib:journal> 
+		<bib:year>        2001                                                                                 </bib:year>    
+		<bib:volume>       43                                                                                   </bib:volume>  
+		<bib:pages>        235-245                                                                              </bib:pages>   
+	</bib:article></bib:entry>
+	
+	<bib:entry id="BarkerThornton03"><bib:article>
+		<bib:author>      Barker J.A. and Thornton J.M.													</bib:author>  
+		<bib:title>       An algorithm for constraint-based structural template matching: application to {3D} templates with statistical analysis       </bib:title>   
+		<bib:journal>     Bioinf.                                                                                                                       </bib:journal> 
+		<bib:year>        2003                                                                                                                         </bib:year>    
+		<bib:volume>      19                                                                                                                            </bib:volume>  
+		<bib:pages>       1644-1649                                                                                                                     </bib:pages>   
+	</bib:article></bib:entry>
+	
+	<bib:entry id="StarkRussell03"><bib:article>
+		<bib:author>      Stark A. and Sunyaev S. and Russell R.B.                      		</bib:author>  
+		<bib:title>       A Model for Statistical Significance of Local Similarities in Structure       </bib:title>   
+		<bib:journal>     J. Mol. Biol.                                                                 </bib:journal> 
+		<bib:year>        2003                                                                         </bib:year>    
+		<bib:volume>      326                                                                           </bib:volume>  
+		<bib:pages>       1307-1316                                                                     </bib:pages>   
+	</bib:article></bib:entry>
+	
+	<bib:entry id="LiangAltman03"><bib:article>
+		<bib:author>      Laing M.P. et.al.     												</bib:author>  
+		<bib:title>       WebFEATURE: an interactive web tool for identifying and visualizing functional sites on macromolecular structures     </bib:title>   
+		<bib:journal>     Nucl. Acids Res.                                                                                                      </bib:journal> 
+		<bib:year>        2003                                                                                                                 </bib:year>    
+		<bib:volume>      31                                                                                                                    </bib:volume>  
+		<bib:pages>       3324-7                                                                                                                </bib:pages>   
+	</bib:article></bib:entry>
+	
+	<bib:entry id="BinkowskiLiang03"><bib:article>
+		<bib:author> 	Binkowski et al.                                                                                    </bib:author>  
+		<bib:title> 	Inferring Functional Relationships of Proteins from Local sequence and Spatial Surface Patterns     </bib:title>   
+		<bib:journal> 	J. Mol. Biol.                                                                                       </bib:journal> 
+		<bib:year> 	2003                                                                                               </bib:year>    
+		<bib:volume> 	332                                                                                                 </bib:volume>  
+		<bib:pages> 	505-526                                                                                             </bib:pages>   
+	</bib:article></bib:entry>
+	
+	<bib:entry id="LichtargeCohen96"><bib:article>
+		<bib:author>      Lichtarge O. and Bourne H.R. and Cohen F.E.						</bib:author>  
+		<bib:title>       An Evolutionary Trace Method Defines Binding Surfaces Common to Protein Families      </bib:title>   
+		<bib:journal>     J. Mol. Biol.                                                                         </bib:journal> 
+		<bib:year>        1996                                                                                 </bib:year>    
+		<bib:volume>      257                                                                                   </bib:volume>  
+		<bib:pages>       342-358                                                                               </bib:pages>   
+	</bib:article></bib:entry>
+	
+	<bib:entry id="LichtargeCohen97"><bib:article>
+		<bib:author>      Lichtarge O. and Yamamoto K.R. and Cohen F.E.               					</bib:author>  
+		<bib:title>       Identification of functional surfaces of the zinc binding domains of intracellular receptors  </bib:title>   
+		<bib:journal>     J.Mol.Biol.                                                                                   </bib:journal> 
+		<bib:year>        1997                                                                                         </bib:year>    
+		<bib:volume>      274                                                                                           </bib:volume>  
+		<bib:pages>       325-7                                                                                         </bib:pages>   
+	</bib:article></bib:entry>
+	
+	<bib:entry id="Connolly83"><bib:article>
+		<bib:author> 	Connolly M.L.							</bib:author>     
+		<bib:title> 	Solvent-accessible surfaces of proteins and nucleic acids       </bib:title>      
+		<bib:journal> 	Science                                                         </bib:journal>    
+		<bib:year> 	1983                                                            </bib:year>       
+		<bib:volume> 	221                                                             </bib:volume>     
+		<bib:pages> 	709-713                                                        </bib:pages>      
+	</bib:article></bib:entry>
+	
+	<bib:entry id="Kinoshita03"><bib:article>
+		<bib:author> 	Kinoshita K. and Nakamura H.												</bib:author>  
+		<bib:title> 	Identification of protein biochemical functions by similarity search using the molecular surface database eF-site       </bib:title>   
+		<bib:journal> 	Protein Science                                                                                                         </bib:journal> 
+		<bib:year> 	2003                                                                                                                    </bib:year>    
+		<bib:volume> 	12                                                                                                                      </bib:volume>  
+		<bib:pages> 	1589–1595                                                                                                              </bib:pages>   
+	</bib:article></bib:entry>
+	
+	<bib:entry id="ShatskyWolfson04"><bib:article>
+		<bib:author>      Shatsky M. and Nussinov R. and Wolfson H.J.             					</bib:author>  
+		<bib:title>       FlexProt: Alignment of Flexible Protein Structures Without a Predefinition of Hinge Regions   </bib:title>   
+		<bib:journal>     Journal of Computational Biology                                                              </bib:journal> 
+		<bib:year>        2004                                                                                         </bib:year>    
+		<bib:volume>      11                                                                                            </bib:volume>  
+		<bib:pages>       83-106                                                                                        </bib:pages>   
+	</bib:article></bib:entry>
+	
+	<bib:entry id="ShatskyWolfson05"><bib:article>
+		<bib:author>      Shatsky M. and Shulman-Peleg A. and Nussinov R. and Wolfson H.J.		</bib:author>  
+		<bib:title>       Recognition of Binding Patterns Common to a Set of Protein Structures         </bib:title>   
+		<bib:journal>     Proceedings of RECOMB 2005                                                    </bib:journal> 
+		<bib:year>        2005                                                                         </bib:year>    
+		<bib:volume>                                                                                   </bib:volume>   
+		<bib:pages>       440-55                                                                       </bib:pages>    
+	</bib:article></bib:entry>
+	
+	<bib:entry id="ChenKavraki05"><bib:article>
+		<bib:author>      Chen B.Y. et al									</bib:author>   
+		<bib:title>       Algorithms for Structural Comparison and Statistical Analysis of 3D Protein Motifs    </bib:title>    
+		<bib:journal>     Proceedings of Pacific Symposium on Biocomputing 2005                                 </bib:journal>  
+		<bib:year>        2005                                                                                  </bib:year>     
+		<bib:volume>                                                                                            </bib:volume>   
+		<bib:pages>       334-45                                                                                </bib:pages>    
+	</bib:article></bib:entry>
+	
+	<bib:entry id="artymuik94"><bib:article>
+		<bib:author>      Artymuik P.J. et. al.    														</bib:author>  
+		<bib:title>       A Graph-theoretic Approach to the Identification of Three dimensional Patterns of Amino Acid Side Chains in Protein Structures        </bib:title>   
+		<bib:journal>     J. Mol. Biol.                                                                                                                         </bib:journal> 
+		<bib:year>        1994                                                                                                                                  </bib:year>    
+		<bib:volume>      243                                                                                                                                   </bib:volume>  
+		<bib:pages>       327-344                                                                                                                               </bib:pages>   
+	</bib:article></bib:entry>
+	
+	<bib:entry id="RosenWolfsonNussinov98"><bib:article>
+		<bib:author>      Rosen M. et. al.      								</bib:author>  
+		<bib:title>       Molecular Shape comparisons in searches for active sites and functional similarity    </bib:title>   
+		<bib:journal>     Prot. Eng.                                                                            </bib:journal> 
+		<bib:year>        1998                                                                                 </bib:year>    
+		<bib:volume>      11                                                                                    </bib:volume>  
+		<bib:pages>       263-277                                                                               </bib:pages>   
+	</bib:article></bib:entry>
+	
+	<bib:entry id="wallace96"><bib:article>
+		<bib:author>      Wallace A.C. and Laskowski R.A. and Thornton J.M.                 			</bib:author>  
+		<bib:title>       Derivation of 3D coordinate templates for searching structural databases            </bib:title>   
+		<bib:journal>     Prot. Sci.                                                                            </bib:journal> 
+		<bib:year>        1996                                                                                 </bib:year>    
+		<bib:volume>      5                                                                                     </bib:volume>  
+		<bib:pages>       1001-13                                                                               </bib:pages>   
+	</bib:article></bib:entry>
+	
+	<bib:entry id="AltschulLipman97"><bib:article>
+		<bib:author>      Altschul S.F. et. al.									</bib:author>  
+		<bib:title>       Gapped BLAST and PSI-BLAST: a new generation of protein database search programs      </bib:title>   
+		<bib:journal>     Nucl. Acids. Res.                                                                     </bib:journal> 
+		<bib:year>        1997                                                                                 </bib:year>    
+		<bib:volume>      25                                                                                    </bib:volume>  
+		<bib:pages>       3389-3402                                                                             </bib:pages>   
+	</bib:article></bib:entry>
+	<bib:entry id="ChenKavraki06"><bib:article>
+		<bib:author>      Chen B.Y. et al.									</bib:author>  
+		<bib:title>       Geometric Sieving: Automated Distributed Optimization of 3D Motifs for Protein Function Prediction      </bib:title>   
+		<bib:journal>     Proceedings of The Tenth Annual International Conference on Computational Molecular Biology (RECOMB 2006)                                                                     </bib:journal> 
+		<bib:year>        2006                                                                                 </bib:year>    
+		<bib:volume>                                                                                          </bib:volume>  
+		<bib:pages>       500-512                                                                             </bib:pages>   
+	</bib:article></bib:entry>	
+	
+
+</bib:file>
+
+</document>

@@ -1,0 +1,313 @@
+<document xmlns="http://cnx.rice.edu/cnxml" xmlns:md="http://cnx.rice.edu/mdml" xmlns:bib="http://bibtexml.sf.net/">
+  <title>Assignment 3: Inverse Kinematics</title>
+  <metadata><md:content-id>undefined</md:content-id><md:title/><md:uuid>29c92015-73b6-45c9-ba00-50e4d3d5c215</md:uuid>
+</metadata>
+
+  <content>
+
+  
+
+  <section id="IKLoopClosure">
+  <title> Motivation for Inverse Kinematics in Proteins </title>
+  <para id="MotivationPara1">
+  One important application of inverse kinematics is in determining missing 
+  portions of protein structure. We traditionally depend on experimental 
+  techniques to provide us with the picture of an average structure for a 
+  protein. X-ray crystallography for example, relies on crystallizing proteins 
+  and reporting the structure of the protein crystal within a certain 
+  resolution. One of the inherent problems with X-ray crystallography is that 
+  mobile protein regions such as loops cause disorder in the crystal and as a 
+  consequence, coordinates for the atoms of these mobile regions cannot be 
+  reported. Often, in the PDB, crystallographically determined proteins are 
+  partially resolved, i.e. a portion of the structure may be missing due to its 
+  intrinsic mobility. Even when experimental techniques such as NMR and cryo-EM 
+  can report an average picture of the fully resolved protein, the average 
+  structure reported is not indicative of the different conformations mobile 
+  regions can assume inside our cells at room temperature.
+  </para>
+  
+  <para id="MotivationPara2">The specific problem of completing a partially resolved protein structure by  
+  finding conformations for its missing loop is known as the fragment 
+  completion or the loop closure problem. Note that the loop closure problem is 
+  actually an inverse kinematics problem. Using sequence information alone, i.e. 
+  knowing the aminoacid sequence of the missing loop, one can generate starting 
+  loop conformations. The loop closure problem requires these loop 
+  conformations to be geometrically constrained by attaching them to the 
+  portion of the protein structure that is experimentally determined.  
+  Note that, as the picture below indicates, one can generate many loop 
+  conformations in space through forward kinematics. One end of the loop can be 
+  attached to its counterpart in the protein through translation alone. The 
+  other end however, needs to be attached without breaking bonds or stretching 
+  bond angles. One way to do this is through inverse kinematics; that is, 
+  knowing the goal position in space for the end of the loop, can we solve for 
+  the dihedral DOFs of the loop conformation? This question can be answered by 
+  Inverse Kinematics techniques.
+    <figure id="loop_closure_illustration">
+    <media id="idp1246688" alt=""><image src="../../media/loop_closure.png" mime-type="image/png"/></media>
+    <caption> One "sticky" end of the loop can be attached to its stationary 
+              counterpart in the protein through translation. The other end 
+              needs to move towards its goal location by solving an Inverse 
+              Kinematics problem.
+    </caption>
+    </figure>
+   </para>
+  </section>
+
+    <section id="CyclicCoordinateDescent">
+    <title> Inverse Kinematics for a Polypeptide Chain </title>
+
+    <para id="Para1"><title> Cyclic Coordinate Descent (CCD) </title>
+     In this assignment you will complete a loop portion in the 1COA structure 
+     of the CI2 protein. X-ray crystallography completely resolves the 1COA 
+     structure. However, even though a long loop region from residue 34 to 
+     residue 46 is present in the native conformation of 1COA, an interesting 
+     exercise is to pretend this loop region cannot be determined. Using an 
+     inverse kinematics approach, you will sample many potential loops that can 
+     all complete the 1COA structure and compare them to the native 
+     conformation obtained through X-ray crystallography. An important question 
+     to answer is whether your loop closure algorithm can recover/predict the 
+     conformational state of this loop region in CI2; that is, how different 
+     are your loops from the one in the native conformation of CI2? You will 
+     implement a simple inverse kinematics technique, Cyclic Coordinate Descent 
+     (CCD) as presented in <cite target-id="CanutescuDunbrack03"/>. For 
+     simplicity, you will work with the native <link resource="backbone_native.pdb"> backbone </link> of 
+     CI2, whose respective native coordinates you can also obtain from the 
+     <link resource="backbone_native.crd"> 
+     backbone_native.crd </link> file. 
+     </para>
+     
+     <para id="additionalBreak1">Your task is to generate 10 different loops 
+     that all complete the protein structure of CI2 and compare them to the 
+     native loop conformation. To do so, even though the native loop 
+     conformation is given to you in the 
+     <link resource="backbone_native.pdb"> 
+     backbone.pdb </link> file, you will pretend that the loop region from 
+     residue 34 to residue 46 is not resolved. You will generate different 
+     conformations for this loop region by randomly sampling values for the 
+     dihedral of the loop, uniformly in the range [-PI, PI]. Then you will use   
+     the CCD algorithm described in <cite target-id="CanutescuDunbrack03"/> 
+     to steer these loop conformations to their goal/target location as 
+     specified by the coordinates of residue 46 in the native conformation of 
+     CI2.
+     </para>
+
+     <para id="additionalBreak2">
+     The Cyclic Coordinate Descent, as defined in 
+     <cite target-id="CanutescuDunbrack03"/>, allows you to find the optimal 
+     dihedral angle for a dihedral bond by whose rotation a desired atom will 
+     get as close as possible to a target position. To simplify this problem, 
+     you will not have target positions for the three atoms N, CA, C as <cite target-id="CanutescuDunbrack03"/> does, but only on one atom, the C 
+     atom. This means that the equations you need to solve for the optimal 
+     dihedral rotation are going to be much simpler, with your distance measure 
+     S defined as the Euclidean distance between current position M of atom C 
+     and its target position F. Please address <link target-id="deliverables"> 
+     Q1 </link>.
+     </para>
+
+  <para id="CCDChain"><title> CCD for a Chain </title>
+  
+  You have noticed by now that CCD reports the angle by which to rotate a 
+  particular dihedral bond so that the feature atom gets as close as possible 
+  to its target position. Consider a chain with the feature atom at its end. As 
+  in real polypeptides, this chain does not contain only one dihedral angle, 
+  but many. How would you use the CCD routine to solve for all the dihedrals of 
+  this chain so that the final end of the chain reaches a target position? 
+  Please address <link target-id="deliverables"> Q2 </link>. (Hint: You might 
+  consider solving for each dihedral one at a time, after you have imposed an 
+  order on the dihedrals you are working with.)
+  </para>
+
+  <para id="GenerateCurrent">
+  For convenience, we will refer to the conformation of the chain where the 
+  atom reaches its target position as the <term>closure conformation</term>. 
+  The problem you will address in this assignment is how to obtain different 
+  closure conformations by solving for the dihedral DOFs of a chain in order to 
+  go from a starting/initial/current conformation to a closure conformation.
+  In order to generate closure conformations, before solving for the dihedral 
+  DOFs through CCD for a chain, you need to generate starting/initial 
+  conformations for the loop region of CI2. One way to do so is to 
+  generate random angles for the dihedrals of the chain and then accumulate the 
+  respective transformation matrices down the chain through Forward Kinematics, 
+  as you have done in Assignment 2.  You are not allowed to rotate only one 
+  dihedral bond to generate a <term>random initial transformation</term>. You 
+  have to rotate all dihedral bonds of a chain by random angles in the interval 
+  [-PI, PI]. Please answer <link target-id="deliverables"> Q3 
+  </link>.
+  </para>
+
+  <para id="IVProblemSpecs">Now it is time for you to put your pseudocode to the test. We first list the 
+  particular specifications for the inverse kinematics problem you will solve 
+  in this assignment.
+   <list id="IVList"><item> For this problem, you will steer the C atom of residue 46 of the loop 
+          region towards its target position. We will refer to this atom as the  
+          <term>feature atom</term>.
+   </item>
+   <item> We need to define the DOFs. As you will only generate closure 
+          conformations for the loop region from residue 34 to residue 46, the 
+          only DOFs you can sample in the intial loop conformations and solve 
+          for in the closure conformations are those of the loop region. Every 
+          other dihedral you cannot change.
+   </item>
+   <item> The CCD algorithm needs to have a measure of distance between the 
+          current position of the feature atom and its target position. After 
+          you have generated initial conformations for the loop region, the 
+          current position of the feature atom is position in space of the C 
+          atom of residue 46 in this initial conformation.
+   </item>
+   <item> The target position of the feature atom will be its position as 
+          specified in the original (native) conformation contained in the 
+          <link resource="backbone_native.crd"> 
+          backbone_native.crd </link> file.
+   </item>
+   <item> Now we can put the pieces together: Generate an initial conformation 
+          by rotating the dihedrals of the 34-46 loop region of CI2 with random 
+          angles sampled uniformly in the [-PI, PI] interval. Solve for 
+          the dihedrals of the 34-46 region so that the C atom of aminoacid 46 
+          in the initial conformation you have just generated reaches its 
+          target position as specified by its position in the native 
+          conformation in the backbone_native.crd file. 
+          
+          Note that depending on the random conformation you start with, it 
+          might be hard to steer atom C to reach its target position. After 
+          applying the dihedrals you have solved for, you might need to do
+          additional iterations to solve for the dihedrals of the updated 
+          conformation, apply those and so on until the spatial constraint for 
+          atom C is satisfied. To have a quantitative criterion for when atom C 
+          satisfies its spatial constraint, you need to define a threshold 
+          parameter for S, as in <cite target-id="CanutescuDunbrack03"/>. 
+          Set this threshold criterion to 0.01 for this assignment.
+          Please answer <link target-id="deliverables"> Q4 </link>.
+   </item>
+   </list>   
+
+   In this way, you will generate 10 closure conformations where the C atom of 
+   aminoacid 46 will be in its target position, its position in the native 
+   conformation.  It is interesting to note that the native conformation itself 
+   is a closure conformation since it satisfies the spatial constraint on this 
+   atom. Now you can quantify the similarity/difference between these 10 
+   closure conformations and the native conformation. As in assignment 1, you 
+   can compute the least RMSD of these 10 closure conformations from the 
+   native. You can also compute the energy of each of these 10 conformations 
+   and the native. Please address <link target-id="deliverables"> Q5 </link> and 
+   <link target-id="deliverables"> Q6 </link> .
+
+   </para>
+
+   <section id="MatlabHelp">
+   <title> Setup with Matlab </title>
+   <para id="MatlabPara">Even though you are welcome to use any programming language to complete this 
+   assignment, we suggest that you use Matlab due to its convenient matrix 
+   operations. For this assignment you will need some basic trigonometry 
+   functions such as <link url="http://mathworld.wolfram.com/Sine.html"> 
+   sine </link> , <link url="http://mathworld.wolfram.com/Cosine.html"> 
+   cosine </link>, <link url="http://mathworld.wolfram.com/Tangent.html"> 
+   tangent </link>, and <link url="http://mathworld.wolfram.com/InverseTangent.html"> 
+   inverse tangent/arctangent </link>. You can find all these functions 
+   already implemented in Matlab. Please get familiar with their syntax 
+   by using the Help pages. Figure 1 captures the Help page for 
+   the category of <term> Functions By Category </term>, subcategory <term> 
+   Elementary Math </term>. You need to read this category to learn more on 
+   how to use these functions.
+
+    <figure id="matlab_trigonometry">
+    <media id="idp2630992" alt=""><image src="../../media/Matlab_trigonometric.png" mime-type="image/png" height="650"/></media>
+    <caption> Matlab Trigonometry </caption>
+    </figure>
+
+    It is very important that you use the right arctangent implementation for 
+    this assignment. The authors in <cite target-id="CanutescuDunbrack03"/> 
+    use the <code display="inline"> atan2 </code> function as implemented in 
+    <code display="inline"> C </code>. There is a similar function in Matlab 
+    <code display="inline"> </code>. Please be careful to understand in what 
+    quadrant this function returns its output. You can learn more about this 
+    function under the Help pages. Figure 2 captures the help page 
+    for this function under the category of <term> Functions By Category 
+    </term>, subcategory <term> Elementary Math </term>, as part of the <term> 
+    Trigonometric </term> functions.
+
+    <figure id="matlab_atan2">
+    <media id="idp3943600" alt=""><image src="../../media/Matlab_atan2.png" mime-type="image/png" height="650"/></media>
+    <caption> Matlab <code display="inline"> atan2 </code> function 
+    </caption>
+    </figure>
+
+   </para>
+   </section>
+
+  </section>   
+
+   <section id="idm8081120">
+  <title> For Submission </title>
+  <para id="submission">
+  Please follow this list closely.
+  
+  <list id="deliverables" list-type="labeled-item"><title> Deliverables </title>
+  <item><label> Q1 </label> 
+    Please repeat the derivation in <cite target-id="CanutescuDunbrack03"/> 
+    with the simplification we made that only one atom is the one we want to to 
+    move to its target position. Typeset these derivations for submission.
+  </item>
+  <item><label> Q2 </label> 
+  Please typeset your pseudocode for how you would iterate over a chain until 
+  the end of the chain reaches its target position.
+  </item>
+  <item><label> Q3 </label> 
+   Please provide pseudocode for how you would generate a random conformation 
+   for the 34-46 region of the protein. Please generate 10 conformations in 
+   this way and visualize these conformations through VMD, all 
+   superimposed over the native. Submit this image.
+  </item>
+  <item><label> Q4 </label> 
+  Please plot all the final 10 conformations where the C atom of aminoacid 46 
+  reaches its target position. Plot these conformations over the native. 
+  Indicate where the C atom lies with a VDW representation in red. Submit this image. (Note: remember that VMD requires a dummy first line in .crd files, so add one if your code does not).
+  </item>
+  <item><label> Q5 </label> 
+  Please compute the RMSD of the 10 closure conformations from the native. 
+  Please plot these values and submit this plot.  Please check the 10 closure 
+  conformations and the native conformation for collisions with the energy 
+  function you implemented in assignment 2. Please report the energetic scores 
+  of each conformation. Does the native conformation contain any collisions? 
+  How do the other closure conformations compare to the native in terms of 
+  energy? What can you conclude about your implementation of CCD to get a 
+  closure conformation with regard to the energy of this closure conformation?
+  </item>
+  <item><label> Q6 </label> 
+  The CCD algorithm does not take into consideration energetic constraints due 
+  to unfavorable steric clashes. One way to impose energetic considerations is 
+  to discriminate against closure conformations that contain steric clashes.
+  You have already implemented a simplistic energy function that can report the 
+  presence of collisions. Please provide pseudo-code on how you would couple 
+  CCD with your energy function to report only closure conformations that do 
+  not contain collisions.
+  </item>
+  </list>
+
+  </para>
+  </section>
+
+  <section id="idp1792288">
+  <para id="clarification">Note: While you are welcome to use any programming language, please typeset 
+   your deliverables. We encourage you to use Matlab. You may use any 
+   visualization software to produce your images.
+  </para>
+  </section>
+
+  </content>
+
+             <bib:file>
+             <bib:entry id="CanutescuDunbrack03">
+		<bib:article>
+		  <bib:author> A. A. Canutescu, and R. L. Dunbrack </bib:author>
+		  <bib:title> Cyclic Coordinate Descent: A Robotics Algorithm for Protein Loop Closure
+                  </bib:title>
+		  <bib:journal> Protein Science </bib:journal>
+		  <bib:year>2003</bib:year>
+                  <bib:volume> 12 </bib:volume>
+		  <bib:pages> 963-972 </bib:pages>
+                  <bib:note> http://www.proteinscience.org/cgi/reprint/12/5/963
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+             </bib:file>
+</document>

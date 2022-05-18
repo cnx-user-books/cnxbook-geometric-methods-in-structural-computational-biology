@@ -1,0 +1,643 @@
+<document xmlns="http://cnx.rice.edu/cnxml" xmlns:m="http://www.w3.org/1998/Math/MathML" xmlns:md="http://cnx.rice.edu/mdml" xmlns:bib="http://bibtexml.sf.net/">
+  <title>Representing Proteins in Silico and Protein Forward Kinematics</title>
+  <metadata><md:content-id>undefined</md:content-id><md:title/><md:uuid>5a35db60-5248-4bbe-9bb4-da136503233b</md:uuid>
+</metadata>
+  <content>
+ <section id="topics_section">
+   <para id="topics_para">
+
+  <list id="topicsList"><title> Topics in this Module </title>
+   <item>
+     <link target-id="StructuralOrganizationofMolecules"> 
+          Modeling Proteins on a Computer
+     </link>
+     <list id="ModelingList">
+       <item>
+         <link target-id="CartesianRepresentation"> 
+           Cartesian Representation of Protein Conformations
+         </link>
+       </item>
+       <item>
+         <link target-id="DegreesOfFreedom">
+           The Internal Degrees of Freedom of a Protein
+         </link>
+       </item>
+       <item>
+         <link target-id="ProteinConformationsSection">
+           Dihedral Representation of Protein Conformations
+         </link>
+       </item>
+     </list>
+   </item>
+   <item> 
+     <link target-id="ManipulationIntro"> 
+       Protein Forward Kinematics
+     </link>
+     <list id="KinematicsList">
+       <item> 
+         <link target-id="BackgroundMaterial"> 
+           Mathematical Background: Matrices and Transformations 
+         </link>
+       </item>
+       <item> 
+         <link target-id="ManipulationIntro"> 
+           Forward Kinematics 
+         </link> 
+         <list id="ForwardKinematicsList">
+           <item>
+             <link target-id="SimpleApproach"> 
+               A simple approach 
+             </link>
+           </item>
+           <item>
+             <link target-id="DenavitHartenberg">
+               Denavit-Hartenberg Local Frames
+             </link>
+           </item>
+         </list>
+       </item>
+     </list>
+   </item>
+  </list>
+
+   </para>
+   </section>
+
+
+<section id="StructuralOrganizationofMolecules">
+<title> Modeling Proteins on a Computer </title>
+
+<para id="element-894">In order to construct efficient, maintainable software to deal with and manipulate protein structures, a suitable way to store these structures has to be adopted. Depending on the ultimate application, different representations may have advantages and disadvantages from a software perspective. For example, when designing a simple visualization software, the Cartesian (x,y,z) coordinates of each atom are useful and simple to render on the screen. However, if the program is to manipulate bond angles and bond lengths for example, a representation based on the internal degrees of freedom (see below) may be more appropriate. Some applications may even need to store more than one representation at a time; for example a simulation program that needs to compute a protein's Potential Energy, which is a function of both Cartesian and Internal coordinates, would benefit from keeping both representations at the same time.</para><para id="element-33">The <term>structure</term> of a protein is the set of atoms it contains, and the bonds that join them, that is, its inherent connectivity. A particular geometric shape of a protein (that is, the spatial arrangement of the atoms in the molecule) is called its <term>conformation</term>. Thus, a given protein structure can have many different conformations. Next, we discuss the two most common ways to model protein structures and conformations for software applications: Cartesian and Dihedral representations.</para><section id="CartesianRepresentation">
+<title>Cartesian Representation of Protein Conformations</title>
+ 
+<para id="essential_info">The most essential information for modeling a protein structure is the relative position of each atom, given as (x,y,z) Cartesian coordinates. Popular imaging methods such as X-Ray Crystallography,  Nuclear Magnetic Resonance (NMR) and Cryogenic Electron Microscopy (Cryo-EM) are used to experimentally obtain relative atom positions from protein crystals and solutions. This is precisely the information provided by Protein Databank (PDB) format coordinate files:
+
+   <figure id="PDB_file_example"><title> First 19 atom coordinate records of PDB entry 2HLA </title>
+   <media id="idp3642176" alt=""><image src="../../media/2HLA pdb text.JPG" mime-type="image/jpeg"/></media>
+   <caption> The third column lists the atom type and the seventh, eighth, and ninth columns contain the x, y, and z coordinates of each atom. These Cartesian coordinates are given in relation to some reference frame determined by the experimental imaging technique, which is not important. The conformation is uniquely specified by the relative positioning of the atoms.</caption>
+   </figure>   
+
+   The coordinates and type of each atom, together with the amino acid type they belong to, are sufficient information to reconstruct the connectivity (bonding) of a protein, and therefore sufficient to render an image of the protein.  If one wishes to allow the protein to move in a realistic fashion, however, more information may be necessary.
+
+</para>
+</section>
+
+<section id="DegreesOfFreedom">
+<title>The Internal Degrees of Freedom of a Protein</title>
+<para id="ThreeD_structure_para">The <term>degrees of freedom</term> of a system are a set of parameters that may be varied independently to define the state of the system.  For example, the location of a point in the Cartesian 2D plane may be defined as a displacement along the x-axis and a displacement along the y-axis, given as a (x,y) pair.  It may also be given as a rotation about the origin by θ degrees and a distance r from the origin, given as a (r,θ) pair.  In either case, a point moving freely in a plane has exactly two degrees of freedom.  </para>
+
+<para id="protein_dofs">As mentioned before, the spatial arrangement of the atoms in a protein constitute its conformation.  In the PDB coordinate file above, we can see that one obvious way to define a protein conformation is by giving x, y, and z coordinates for each atom, relative to some arbitrary origin. These are not independent degrees of freedom, however, because atoms within a molecule are not allowed to leave the vicinity of their neighboring atoms (if no chemical reaction takes place). Pairs of atoms bonded to each other, for example, are constrained to remain close, so moving one atom causes others connected to it to move in a dependent fashion. In the kinematics terminology, this means that the true, effective or independent number of degrees of freedom is much less than the input space parameters -an (x,y,z) tuple for each atom-. The remainder of this section defines a set of independent degrees of freedom that more readily model how proteins and other organic molecules can actually move.</para>
+
+<section id="bond_section">
+ <title> Bonds and Bond Length </title>
+   <para id="bonds_para">The atoms in proteins are connected to one another through covalent bonds.  Each pair of bonded atoms has a preferred separation distance called the <term>bond length</term>.  The bond length can vary slightly with a spring-like vibration, and is thus a degree of freedom, but realistic variations in bond length are so small that most simulations assume it is fixed for any pair of atoms. This is a very common assumption in the literature and reduces the effective degrees of freedom of a protein; the remainder of this module makes this assumption.</para>
+
+<para id="bonds_para_2">Although bond lengths will not be allowed to vary in this work, the presence of bonds is still important because it allows us to represent the connectivity of the protein as an undirected graph data structure, where the atoms are the nodes and the bonds between them are undirected edges.  In some cases, it is helpful to artificially break any cycles in the graph, and choose an atom from the interior as an anchor atom.  The graph can then be treated as a tree data structure, with the anchor atom as the root.
+
+   <figure id="protein_graph"><title> A Protein as a Graph Data Structure</title>
+   <media id="idm1010928" alt=""><image src="../../media/protein_graph-7ebc.jpg" mime-type="image/jpeg" height="174"/></media>
+   <caption> A tree-like representation of protein connectivity, for a very small molecule.  Cycles are broken by ignoring one bond in each.</caption>
+   </figure>   
+
+
+   </para> 
+</section>
+
+
+<section id="bond_angle_section">
+ <title> Bond Angles </title>
+  <para id="bond_angles_para">Bond length is an independent degree of freedom given two connected atoms.  A set of three atoms bonded in sequence defines another degree of freedom: the angle between the two adjacent bonds.  This is, appropriately, referred to as the <term>bond angle</term>. The bond angle can be calculated as the angle between the two vectors corresponding to the bonds from the central atom to each of its neighbors.  As a reminder, the angle between two vectors is the inverse cosine of the ratio of the dot product of the vectors to the product of their lengths.
+
+Like bond lengths, bond angles tend to be characteristic of the atom types involved, and, with few exceptions, vary little. Thus, like bond lengths, this module considers all bond angles as fixed (again, this is a common assumption).</para>
+</section>
+
+<section id="dihedrals_section">
+ <title> Dihedral Angles </title>
+   <para id="dihedrals_para">In most organic molecules, including proteins, the most important internal degree of freedom is rotation about <term>dihedral (torsional) angles</term>.  A dihedral angle is defined by four consecutively bonded atoms.  Given four consecutive atoms 
+   <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 2 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>,
+    
+	<m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>,    
+
+	  <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:ci> i </m:ci>
+	      </m:msub>
+	  </m:math>, and 
+
+	  <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:plus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>,
+
+   the dihedral angle is defined as the smallest angle between the planes
+
+   <m:math>
+	      <m:msub>
+	        <m:ci>π</m:ci>
+		<m:ci> 1 </m:ci>
+	      </m:msub>
+	  </m:math> 
+and 
+        <m:math>
+	      <m:msub>
+	        <m:ci>π</m:ci>
+		<m:ci> 2 </m:ci>
+	      </m:msub>
+	  </m:math>, as shown in the figure.
+
+Variation of the dihedral angle is a consequence of rotation of  the two outer bonds about the central bond.
+
+   <figure id="dihedrals_illustration"><title> A Dihedral Angle </title>
+   <media id="idm9539632" alt=""><image src="../../media/dihedral.png" mime-type="image/png" height="400"/></media>
+   <caption> <m:math> <m:msub> <m:ci>π</m:ci> <m:ci> 1 </m:ci> </m:msub>
+	     </m:math> is the plane uniquely defined by the first three atoms
+               <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 2 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>,    
+           <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>,    and <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:ci> i </m:ci>
+	      </m:msub>
+	  </m:math>. Similarly, <m:math> <m:msub> <m:ci>π</m:ci> <m:ci> 2 </m:ci> </m:msub> </m:math> is the plane uniquely defined by the last three atoms <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>,    and <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:ci> i </m:ci>
+	      </m:msub>
+	  </m:math>, and 
+          <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:plus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>.  
+The dihedral angle, θ, is defined as the smallest angle 
+   between these two planes. You can read more about the <link url="http://mathworld.wolfram.com/Plane.html"> angle between two intersecting planes here</link>.
+   </caption>
+   </figure>
+ 
+ In this module, because bond lengths and bond angles are being ignored as underlying degrees of freedom of a protein, the only remaining degrees of freedom are the dihedral rotations. Representing protein conformations with the dihedral angles 
+ as the only underlying degrees of freedom is known as the <term>idealized</term> or
+ <term>rigid geometry model</term>. Ignoring bond lengths and bond angles greatly reduces the number of degrees of freedom and therefore the computational complexity of representing and manipulating protein structures. Even more efficient representations which reduce the number of degrees of freedom even further exist <cite target-id="ZhangKavraki"/>, but these are beyond the scope of this introduction.
+ 
+ </para>   
+</section></section>
+
+<section id="ProteinConformationsSection">
+  <title> Dihedral Representation of Protein Conformations </title>
+   <para id="conformation_def_para1">All amino acids share the same core of one nitrogen, two carbon, and one oxygen atoms.  This shared core makes up the backbone of the protein. There are two freely rotatable backbone dihedral angles per amino acid residue in the protein chain: the first, designated <m:math><m:ci>φ</m:ci></m:math>, is a consequence of the rotation about the bond between 
+           <m:math><m:ci>N</m:ci></m:math> and 
+           <m:math>
+	      <m:msub>
+	        <m:ci>C</m:ci>
+	        <m:ci>α</m:ci>
+	      </m:msub>
+	   </m:math>, and the other, <m:math><m:ci>ψ</m:ci></m:math>, which is a consequence of the rotation about the bond between         
+           <m:math>
+	      <m:msub>
+	        <m:ci>C</m:ci>
+	        <m:ci>α</m:ci>
+	      </m:msub>
+	  </m:math> and         
+	  <m:math>
+	        <m:ci>C</m:ci>
+	  </m:math>. The peptide bond between C of one residue and N of the adjacent residue is not rotatable. 
+</para>
+
+<para id="conformation_def_para2">The number of backbone dihedrals per amino acid is 2, but the number of side chain dihedrals varies with the length of the side chain. Its value ranges from 0, in the case of glycine, which has no sidechain, to 5 in the case of arginine.
+
+   <figure id="dihedrals_aminoacid_illustration"><title> Dihedral Angles in Arginine</title>
+   <media id="idp1545808" alt=""><image src="../../media/dihedrals_illustration.png" mime-type="image/png" height="250"/></media>
+   <caption> The backbone atoms appear at the bottom of the illustration (the peptide bond is not rotatable). The sidechain dihedrals are conventionally designated by χ and a subscript. </caption>
+   </figure>   
+  
+One can generate different three dimensional structures of the same protein by varying the dihedral angles. There are 2N backbone dihedral DOFs for a protein with N amino acids, and up to 4N side chain dihedrals that one can vary to generate new protein conformations.  Changes in backbone dihedral angles generally have a greater effect on the overall shape of the protein than changes in side chain dihedral angles.  Think about why.</para>
+
+ </section>
+</section>
+
+
+   <section id="ManipulationIntro">
+   <title> Protein Forward Kinematics </title>
+   <para id="manipulationPara"><term>Kinematics</term> is a branch of mechanics concerned with how objects move in the absence of mass (inertia) and forces. You can imagine that varying the dihedral angles will move a protein's atoms relative to each other in space. The problem of computing the new spatial locations of the atoms given a set of dihedral rotations is known as the <term> forward kinematics </term> problem.</para>
+
+<para id="ManipulationIntro2">The importance of this problem to protein modeling and simulation should be clear: as stated earlier, the only internal degrees of freedom usually considered for a protein are its dihedral angles.  Thus, moving a protein will be achieved by setting some of its dihedral angles to new values. For some applications, such as the rendering of an image of the protein and the computation of its Energy, however, the Cartesian (x,y,z) coordinates for each atom are needed. These are obtained by forward kinematics. </para>  
+
+
+   <section id="BackgroundMaterial">
+   <title> Mathematical Background: Matrices and Transformations </title>
+   <para id="BackgroundIntro">The math involved in solving forward kinematics requires some background in linear algebra, specifically in the anatomy and application of transformation matrices.  The links provided in this section should provide enough mathematical background to understand the rest of this module and eventually write a simple protein manipulation program. 
+
+   <list id="BackgroundList"><title> Background on Transformations </title>
+ 
+  <item> <term> Transformation Matrices: </term> 
+  The main transformations you will apply to polypeptide chains will be a 
+  combination of <term>translations</term> and <term>rotations</term>. Please see <link url="http://mathworld.wolfram.com/Translation.html"> introduction to translations </link> and <link url="http://mathworld.wolfram.com/RotationMatrix.html"> 
+    introduction to two- and three-dimensional rotations</link>.  One special rotation matrix is the <link url="http://mathworld.wolfram.com/EulerAngles.html"> Euler matrix </link>. Please pay particular attention to the different conventions used for defining the Euler matrix. The one adopted for this module is the XYZ convention (there is also the ZXZ convention). Now that you know what an Euler matrix looks like, you need to get familiar with rotations about an arbitrary vector or line.  Please read more on <link url="http://mathworld.wolfram.com/EulerParameters.html"> rotations around an arbitrary vector </link>.
+
+
+</item>
+
+  <item> <term> Homogeneous Transformations: </term>
+  The use of homogenous coordinates and transformations can simplify some of the calculations involved in using three-dimensional transformations. In particular, they allow <term>translation</term>, which is not a linear operator in 3D, to become a linear operator in the 3D subspace (x,y,z,1) of a 4D space. The advantage of this representation is that translation becomes achievable by multiplying a vector by a matrix, and so becomes composable. A direct benefit from this is the ability to express, as a matrix, a rotation around an <term>arbitrary point</term>, not just the origin as in the pure 3D case. See <link url="http://bishopw.loni.ucla.edu/AIR5/homogenous.html"> homogenous transformations </link>.
+  </item>
+
+  <item> <term> Quaternions  </term>
+   Quaternions are an efficient, robust method of representing three-dimensional rotations.  In particular, they are not subject to the undesirable singularities and numerical instability of rotations represented by orthonormal matrices and Euler angles.  Please visit this introduction to <link url="http://mathworld.wolfram.com/Quaternion.html"> quaternions 
+   </link> to see how they relate to homogenous transformations. In this class quaternions will be used for the optimal structural alignment of two proteins and it is recommended that the reader familiarizes him/herself with the concept of quaternions as soon as possible.
+   </item>
+  </list>
+
+   A more detailed discussion of spatial descriptions and transformations can be found in  chapter 2 of 
+   <cite target-id="craig"/>. The most widely used transformations to manipulate protein chains are rotations. Several representations are possible for rotations:
+<list id="rotation_reps"><item><term>Euler angles</term>:  The orientation of an object is given as three rotations about set axes.  For example, in the ZXZ convention, the angles specify a rotation about the global z-axis, followed by one about the global x-axis, and finally, one more about the global z-axis.  The use of Euler angles is subject to an undesirable phenomenon called <term>gimbal lock</term>, in which two of the rotational axes become aligned in such a way that a degree of freedom is lost.</item>
+
+<item><term>Cardan angles</term>:  The orientation is specified as a set of three rotations about axes defined by the object.  The typical example is the pitch-roll-yaw set of rotations for an aircraft.  Pitch corresponds to a rotation about the axis from wingtip to wingtip.  Roll corresponds to a rotation about an axis from the nose to the tail, and yaw corresponds to rotation about a third "vertical" axis through the center of the plane, and roughly corresponds to a notion of horizontal heading.  This method is also subject to gimbal lock.</item>
+
+<item><term>Axis-angle representation</term>:  It can be proven that any three-dimensional rotation can be represented as a single rotation about an axis, represented by a unit vector.</item>
+
+<item><term>Rotation matrices</term>: A rotation matrix is an orthonormal matrix that represents a rotation. Rotation matrices are discussed later in the module. Applying the matrix to a vector yields the rotated vector.  Given two rotations represented by matrices A and B, the result of applying both rotations in sequences is given by the matrix product AB.</item>
+
+<item><term>Unit quaternions</term>: A rotation of angle theta about the axis represented by the unit vector v = [x, y, z] is represented by a unit quaternion. Quaternions are described in <link document="m11608">this module</link>.</item></list></para>
+   </section>
+
+   <section id="FowardKinematicsIntro">
+   <title> Forward Kinematics </title>
+   <para id="element-595">As stated earlier, a common operation when manipulating proteins in silico is to retrieve the Cartesian coordinates of each atom in the protein from our knowledge of its dihedral angles and rotations applied to them.
+
+For simplicity, assume we have an anchor atom and we are modeling the protein backbone only, that is, the protein consists of a serial linkage composed of consecutive backbone atoms, as shown in Figure 5.
+</para>
+
+<section id="SimpleApproach"><title>A Simple Approach</title>
+<para id="simple_approach">The simplest way to represent a protein chain is to store the Cartesian (x,y,z) coordinates of each atom at all times. These coordinates are relative to some global coordinate frame which is unimportant, for example that in which the atomic positions were obtained by X-Ray crystallography and which are typically read from the PDB files. These coordinates can be changed if so desired. Common changes are to remove the center of mass (thus centering the protein at the global origin), subtract the position of the anchor atom (to center the protein at this atom), etc.</para><para id="element-608">But it was discussed earlier that the "natural" degrees of freedom for kinematic manipulations are usually the dihedral angles alone. This means that algorithms that operate on dihedral angles to achieve their goals will normally require a way to modify the Cartesian coordinates when dihedral rotations are performed, to reflect the new atomic positions. This can be easily done with rotation matrices as follows.</para><figure id="backbone"><media id="idm641184" alt=""><image src="../../media/rotation.png" mime-type="image/png"/></media>
+<caption>A protein backbone as a serial linkage.</caption></figure><para id="element-60">When a rotation of θ degrees around bond i is performed, one can think of all atom positions starting at i+2 rotating around the axis defined by bond i, and all other atoms (from anchor to atom i+1 inclusive) remaining stationary. Thus, upon such a rotation, the Cartesian coordinates of the atoms after the bond need to be updated, and their new values are given by:
+</para><para id="element-308"><media id="idm10705792" alt=""><image src="../../media/simple1.png" mime-type="image/png"/></media></para><para id="element-849">Where [x,y,z,1] is the position of a generic atom in homogeneous form, [x',y',z',1] is its position after the rotation (T is the transpose operator), and R(i,θ) is a 4x4 matrix that encodes a rotation of θ degrees around an axis coinciding with bond i that passes through atom  <m:math><m:msub><m:ci>a</m:ci><m:ci>i</m:ci></m:msub></m:math>, and is given in homogeneous form as:
+
+</para><para id="element-589"><media id="idm9741712" alt=""><image src="../../media/simple2.png" mime-type="image/png"/></media></para><para id="element-165">In the above formula, T(x) is a translation by the vector x and <m:math><m:msub><m:ci>R</m:ci><m:ci>0</m:ci></m:msub></m:math>(axis,θ) is a rotation around an axis that goes through the origin of the specified coordinate system. As can be seen, this rotation around an arbitrary point is realized by translating the point to the origin, rotating  the target atom around the axis through the origin, and then translating it back (the composition of these 3 transformations yields a unique 4x4 homogeneous matrix that achieves the same effect). The axis of rotation can easily be computed from the positions of atoms i and i+1 and must have unit norm. To perform successive rotations about different bonds, this procedure can be repeated, updating the Cartesian coordinates for each rotation. Note that the convention used for matrix-vector multiplication is to multiply <term>column</term> vectors by matrices on the <term>left</term>, so the rightmost transformation gets applied first, and so on. This is the convention used in most of the literature, but the alternate convention is possible (multiplying <term>row</term> vectors with matrices on the <term>right</term>; these matrices are the transpose of the column-vector convention).</para><para id="element-721">Alternatively, if many rotations need to be performed at the same time (and the intermediate Cartesian coordinates are not needed), these rotations could be sorted by bond number and applied simultaneously, by noting that rotations can be performed in a cumulative way as the
+backbone is traversed from anchor to end atom. The ability to chain rotations around arbitrary vectors in space (i.e. not through the origin) is one of the main benefits of homogeneous transformations. For example, if two rotations need to be applied at the same time, one around bond 3 by 30 degrees and another around bond 7 by 15 degrees, the atoms between bonds 3 and 7 get updated by:
+
+</para><para id="element-441"><media id="idp1473440" alt=""><image src="../../media/simple3.png" mime-type="image/png"/></media></para><para id="element-322">But the atoms after bond 7 are updated by:</para><para id="element-813"><media id="idm1523600" alt=""><image src="../../media/simple4.png" mime-type="image/png"/></media></para><para id="element-363">In the above, <term>bond n</term> is the unit vector defined along bond n, easily computed by subtracting the coordinates of atoms n+1 and n, and then dividing by its norm. The chaining of transformations as explained above is very useful to achieve arbitrary rotations of bonds within a protein. Sections of the protein (i.e. atoms belonging to certain residues) can be updated when a dihedral rotation is performed simply by constructing the overall matrix that should affect them.</para>
+</section>
+
+<section id="DenavitHartenberg"><title>Denavit-Hartenberg Local Frames</title>
+<para id="element-953">The previous approach, while simple and intuitive, has some shortcomings:</para><list id="element-538" list-type="bulleted"><item>The accumulation of math operations in the rotation matrices is prone to
+   numerical instability. After only a couple of hundred rotations of a
+   point, each accumulating on the other, the final position of the point
+   may start differing significantly from its actual, intended position.
+   As a consequence, the relative position and orientation of atoms in the
+   protein chain will no longer be in agreement with the protein structure.
+   In particular, bond lengths and angles will begin stretching and
+   deviating from their physically acceptable values.</item>
+<item>The actual values of the Cartesian coordinates are always stored in a
+   particular, arbitrarily chosen frame of reference. For example, if we 
+   wanted to translate the protein, we would need to modify the Cartesian 
+   coordinates stored.</item>
+<item>Once a rotation is applied, the method "forgets" the current values of
+ the dihedral angles, which would need to be re-computed if needed. What is
+   stored is a snapshot of the current Cartesian coordinates of each 
+   atom.</item></list><para id="element-611">The original definition of Forward Kinematics, however, is a method to obtain the Cartesian coordinates of each atom from the current values of the internal degrees of freedom (dihedral angles in our case) at any time. In such an approach, the Cartesian coordinates need not be recomputed after every change in the dihedral angles; rather, the idea is to store the current values of the dihedral angles, and to have a procedure to reconstruct the atomic positions when needed. The advantages of this approach are:</para><list id="element-859" list-type="bulleted"><item>A more compact representation of the variables of the problem, 
+      since the dihedral angles require less space than the (x,y,z) 
+      coordinates of each atom (the protein topology requires the values 
+      of the bond lengths and angles anyway, so the total amount of numbers 
+      to store is comparable).</item>
+<item>It is not prone to numerical instability since the number of rotations
+      performed to position an atom is always its sequence number in the 
+      chain. (Actually if the chain is thousands of residues long, some 
+      uncertainty could arise in the position of atoms far along the chain, 
+      but the relative position of consecutive atoms can still be kept under 
+      control, avoiding bond stretching).</item>
+<item>Performing a dihedral rotation consists simply of adding/subtracting the rotation
+      angle from the stored value for each angle. In particular, simultaneous rotations
+      (i.e. rotating more than one dihedral angle at a time) which consists of multiplying
+      many 4x4 matrices in the global method, reduces to modifying the angle values.</item>
+<item>There is no explicit global coordinate frame for the protein. It can 
+      be positioned arbitrarily by prepending a position/orientation matrix 
+      to the forward kinematics computation.</item></list><para id="element-131">The only preprocessing step that is necessary to start working with this method, however, is to perform an initial pass on the protein to extract the initial values of the dihedral angles and the constant bond lengths and angles, from the Cartesian coordinates available from PDB files, if the intention is to start from the protein's native state. This is easily done; bond lengths can be obtained by computing the distance between the bonded atoms, and bond angles by computing the angle between the vectors formed by two consecutive bonds (recall that the dot product of two vectors yields the product of their lengths times the cosine of the angle between them). Next, we present the transformations required for the Denavit-Hartenberg method.</para><para id="forward_kinematics">Consider three consecutive bonds as in the figure below. Suppose that a 
+   local coordinate frame is attached at the beginning of each bond. For example, local coordinate system <m:math><m:msub><m:ci>x</m:ci><m:apply>		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>,<m:math><m:msub><m:ci>y</m:ci><m:apply>		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>,<m:math><m:msub><m:ci>z</m:ci><m:apply>		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math> is centered at atom <m:math><m:msub><m:ci>A</m:ci><m:apply>		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>. Therefore, 
+   imagine that the position of each atom in three-dimensional space is specified in terms of
+   a frame that is centered at the previous atom. Given the frames at atom  <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 2 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>, and atom 
+          <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>, one can determine how the frames at atoms 
+          <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:ci> i </m:ci>
+	      </m:msub>
+	  </m:math> and atom <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math> will change in space as a consequence of a rotation around the bond that connects atoms <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math> and <m:math>
+	      <m:msub>
+	        <m:ci>A</m:ci>
+		<m:ci> i </m:ci>
+	      </m:msub>
+	  </m:math> with the dihedral angle <cite target-id="ZhangKavraki"/>. The correct transformation can be computed in terms of three primitive operations: two rotations and one translation. The two rotations are a rotation around the dihedral bond by the dihedral angle and a rotation around an axis perpendicular to the bond angle, by the bond angle. The translation refers to the fact that the origins of the frames are on the respective centers of  the atoms connected by the bond, thus separated by bond lengths.  
+
+   <figure id="alpha_l_theta"><title> The Denavit-Hartenberg convention </title>
+   <media id="idp3630400" alt=""><image src="../../media/DH_fig_illustration.png" mime-type="image/png" height="250"/></media>
+   <caption> 
+   To describe the position of atom i in terms of the coordinate frame centered at atom i-1, two rotations and a translation are composed.
+   </caption>
+   </figure>   
+
+The order in which to compose these 3 transformations, to obtain the total transformation that expresses the position of atom i in terms of frame i-1, is the following:
+
+<media id="idp1087216" alt=""><image src="../../media/dh2.png" mime-type="image/png"/></media>
+
+where the rotation axes are the usual x (1,0,0) and z (0,0,1), not to be confused with the DH Local Frames. The resulting homogenous transformation is shown below. 
+
+   <figure id="trans_matrix"><title> Transformation </title>
+   <media id="idp7936944" alt=""><image src="../../media/trans_matrix.png" mime-type="image/png"/></media>
+   <caption> Homogeneous transformation to express the coordinates of atom i in terms of the frame centered at i-1 </caption>
+   </figure>
+
+  Note that          
+      <m:math>
+	      <m:msub>
+	        <m:ci>θ</m:ci>
+		<m:ci> i </m:ci>
+	      </m:msub>
+	  </m:math>
+ is the dihedral angle on bond          
+        <m:math>
+	      <m:msub>
+	        <m:ci>b</m:ci>
+		<m:ci> i </m:ci>
+	      </m:msub>
+	  </m:math>
+ and 
+ 	<m:math>
+	      <m:msub>
+	        <m:ci>α</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>
+ is the bond angle between bonds 
+ 	<m:math>
+	      <m:msub>
+	        <m:ci>b</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>
+ and 
+         <m:math>
+	      <m:msub>
+	        <m:ci>b</m:ci>
+		<m:ci> i </m:ci>
+	      </m:msub>
+	  </m:math>.  
+<m:math>   <m:msub>
+	        <m:ci>d</m:ci>
+		<m:ci> i </m:ci>
+	      </m:msub>
+	  </m:math>
+  is the length of bond <m:math>
+	      <m:msub>
+	        <m:ci>b</m:ci>
+		<m:ci> i </m:ci>
+	      </m:msub>
+	  </m:math>.
+For a more detailed derivation of this transformation, please read the included material in required readings.
+
+The position of any atom in the molecule can be determined by chaining matrices of the form given above.  For example, suppose that 
+         <m:math>
+	      <m:msub>
+	        <m:ci>b</m:ci>
+		<m:ci> i </m:ci>
+	      </m:msub>
+	  </m:math>, 
+  	<m:math>
+	      <m:msub>
+	        <m:ci>b</m:ci>
+		<m:apply>
+		<m:minus/>
+		<m:ci> i </m:ci>
+		<m:mn> 1 </m:mn>
+	        </m:apply>
+	      </m:msub>
+	  </m:math>, ..., 
+         <m:math>
+	      <m:msub>
+	        <m:ci>b</m:ci>
+		<m:mn> 1</m:mn>
+	      </m:msub>
+	  </m:math>, 
+	  represents the sequence of bonds on the path from a particular atom <m:math><m:ci>a</m:ci></m:math> to the anchor atom 
+         <m:math>
+	      <m:msub>
+	        <m:ci>a</m:ci>
+		<m:ci> anch</m:ci>
+	      </m:msub>
+	  </m:math>.
+
+Then, for atom <m:math><m:ci>a</m:ci></m:math>, its Cartesian coordinates with respect to the frame attached to the anchor atom is given by:
+
+    <figure id="equation_1">
+   <title> Equation 1 </title>
+   <media id="idp4208992" alt=""><image src="../../media/equation_final.png" mime-type="image/png"/></media>
+   <caption> The coordinates of atom <m:math><m:ci>a</m:ci></m:math> with 
+             respect to the local frame attached to it are 0, 0, 0.
+   </caption>
+   </figure>   
+
+
+   To complete the description, one can allow for rotations or translations of the local frame
+   attached to the anchor atom with respect to some global
+   frame. Rotations of the anchor atom with respect to a global frame
+   cause a rigid rotation of the entire polypeptide chain. To do so, one
+   can define the rotation frame as the Euler matrix defined by the Euler
+   angles of the local frame of the anchor atom to the global frame. 
+
+   As discussed before, there are many conventions to define the Euler matrix. One of
+   them, the X-Y-Z convention, defines the Euler matrix as the product
+   of three rotation matrices: rotation around the z axis by angle
+   <m:math><m:ci>α</m:ci></m:math>; rotation around the y axis by   
+   angle <m:math><m:ci>β</m:ci></m:math>; rotation
+   around the x axis by the angle <m:math><m:ci>γ</m:ci></m:math>. The 
+   order of performing these three rotations in the X-Y-Z conventions is: 
+   rotation around x axis first, then around y axis second, and around z axis 
+   last. The resulting Euler matrix according to this convention is given 
+   below:
+
+   <figure id="euler_matrix"><title> Euler Matrix </title>
+   <media id="idp2847760" alt=""><image src="../../media/euler_matrix-53f4.jpg" mime-type="image/jpeg" height="146"/></media>
+   <caption> <m:math><m:ci>α</m:ci></m:math>, <m:math><m:ci>β</m:ci></m:math>, <m:math><m:ci>γ</m:ci></m:math> are the so-called Euler angles - the angles with respect to each of the Cartesian axes. The convention used here is the XYZ convention. <m:math><m:ci>cα</m:ci></m:math> and <m:math><m:ci>sα</m:ci></m:math> denote cos(<m:math><m:ci>α</m:ci></m:math>) and sin(<m:math><m:ci>α</m:ci></m:math>) respectively. </caption>
+   </figure>   
+
+The Euler matrix can be applied last to the accumulating dihedral rotations in order to allow the anchor atom to move with respect to a global frame. For a more detailed explanation, please read the included material in required readings.
+</para>
+</section>
+</section>
+
+
+ <section id="PDFS">
+ <para id="RequiredReading"><title> Required Reading </title>
+ 
+ <list id="PDFs"><item>  <link url="http://pubs.acs.org/cgi-bin/article.cgi/jcisd8/2002/42/i01/pdf/ci010327z.pdf"> Zhang-Kavraki 2002 [PDF] </link> Zhang, M. and L. E. Kavraki, "A New Method for Fast and Accurate Derivation of Molecular Conformations". Journal of Chemical Information and Computer Sciences, 42:64-70, 2002.
+ </item>
+
+ <item> Stamati-Shehu-Kavraki. Computing Forward Kinematics for Protein-like linear systems using Denavit-Hartenberg Local Frames <link resource="DH-deriv.pdf">[PDF]</link>
+ </item>
+</list>
+ </para><para id="element-910"><list id="programs" list-type="enumerated"><title> Resources </title>
+<item><term>VMD</term> Visual Molecular Dynamics, is an excellent tool for visualization and scripted manipulation of protein structures that uses Tcl scripting - Humphrey, W., Dalke, A. and Schulten, K., "VMD - Visual Molecular Dynamics", J. Molec. Graphics, 1996, vol. 14, pp. 33-38.</item>
+
+<item><term>RasMol</term> is mostly a viewer, but has some built-in tools. - Roger Sayle and E. James Milner-White. "RasMol: Biomolecular graphics for all", Trends in Biochemical Sciences (TIBS), September 1995, Vol. 20, No. 9, p. 374.</item>
+
+<item><term>Chimera</term> is a very powerful visualizer that handles huge structures easily. - Pettersen, E.F., Goddard, T.D., Huang, C.C., Couch, G.S., Greenblatt, D.M., Meng, E.C., and Ferrin, T.E. "UCSF Chimera - A Visualization System for Exploratory Research and Analysis." J. Comput. Chem. 25(13):1605-1612 (2004).</item>
+
+<item><term>InsightII</term>, <term>Cerius2</term> and <term>Catalyst</term> are products for simulation, discovery and analysis that recently became commercial, and can be found <link url="http://www.accelrys.com/products/">here</link>.</item>
+
+<item><term>CHARMM</term> is a simulation package based on the CHARMM force field. Brooks BR, Bruccoleri RE, Olafson BD, States DJ, Swaminathan S, Karplus M (1983). "CHARMM: A program for macromolecular energy, minimization, and dynamics calculations". J Comp Chem 4: 187217.</item>
+
+<item><term>NAMD</term> is another popular simulation package and can be obtained <link url="http://www.ks.uiuc.edu/Research/namd/">here</link>. James C. Phillips, Rosemary Braun, Wei Wang, James Gumbart, Emad Tajkhorshid, Elizabeth Villa, Christophe Chipot, Robert D. Skeel, Laxmikant Kale, and Klaus Schulten. Scalable molecular dynamics with NAMD. Journal of Computational Chemistry, 26:1781-1802, 2005.</item>
+
+<item><term>Amber</term> is one of the most widely used molecular dynamics simulators due to its speed. Duan et al. A point-charge force field for molecular mechanics simulations of proteins based on condensed-phase quantum mechanical calculations Journal of Computational Chemistry Vol. 24, Issue 16. Pages 1999-2012 (2003).</item>
+</list></para>
+ </section>
+
+</section>
+
+  </content>
+             <bib:file>
+
+	      <bib:entry id="craig">
+		<bib:book>
+		  <bib:author> Craig, J. J. </bib:author>
+		  <bib:title> Introduction to Robotics: Mechanics and Control  (chapter 2)</bib:title>
+		  <bib:publisher> Addison-Wesley</bib:publisher>
+		  <bib:year>2003</bib:year>
+		  <bib:address>Reading, MA</bib:address>
+		</bib:book>
+	      </bib:entry>
+  
+              <bib:entry id="ZhangKavraki">
+		<bib:article>
+		  <bib:author> M. Zhang, and L. E. Kavraki </bib:author>
+		  <bib:title> A New Method for Fast and Accurate Derivation of Molecular Conformations 
+                  </bib:title>
+		  <bib:journal> Journal of Chemical Information and Computer Sciences </bib:journal>
+		  <bib:year>2002</bib:year>
+                  <bib:volume> 42 </bib:volume>
+		  <bib:pages> 64-70 </bib:pages>
+                  <bib:note> http://pubs.acs.org/cgi-bin/article.cgi/jcisd8/2002/42/i01/pdf/ci010327z.pdf
+                  </bib:note>
+		</bib:article>
+	      </bib:entry>
+	    </bib:file>  
+  
+</document>

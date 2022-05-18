@@ -1,0 +1,229 @@
+<document xmlns="http://cnx.rice.edu/cnxml" xmlns:md="http://cnx.rice.edu/mdml">
+  <title>Assignment 1: Visualization and Ranking of Protein Conformations</title>
+  <metadata>
+  <md:content-id>m11615</md:content-id><md:title>Assignment 1: Visualization and Ranking of Protein Conformations</md:title>
+  <md:abstract>This assigment introduces students to the visualization software VMD and allows them to get familiar with protein structures. Students are required to visualize protein conformations and understand the differences between structures based on their geometry. Students will rank the provided conformations based on their geometric differences.</md:abstract>
+  <md:uuid>1912ab72-ac88-4611-a128-973324235d2a</md:uuid>
+</metadata>
+
+<content>
+
+  
+
+  <para id="element-913"><emphasis> Please download files for this assignment from <link document="m11615" resource="assignment1.zip">here</link>.</emphasis></para><section id="PDB">
+  <title> Protein Data Bank </title>
+  
+  <para id="CI2structures">Your first task is to get familiar with the Protein Data Bank
+   (PDB). Visit the <link url="http://www.pdb.org/"> PDB website
+   </link> and perform a site search for CI2 (chymotrypsin inhibitor2). Upon this search, some of the results (in particular those related to the Molybdenum Cofactor) you can disregard. Focus primarily on structures whose PDB name starts with "1C".
+   Find the functional role of CI2 and answer <link target-id="deliverables"> Q1 </link>. 
+  
+   Your search will report many different experimentally
+   resolved structures for this protein. Please answer why that is so in <link target-id="deliverables"> Q2 </link>.
+
+   Focus first on the resolved structures with PDB codes 1CIQ, 1CIR, and 1COA. Note that
+   these structures were resolved from different organisms and with different experimental
+   methods. Please answer <link target-id="deliverables"> Q3 </link>.
+
+   </para>    
+
+   <para id="CI2download">Let's focus now on one particular structure, the one with PDB code 1COA. 
+   You can view an image of the structure of 1COA from the PDB website with the 
+   "Images and Visualization" frame to the right. You can either cycle through different images of the protein or download files for different programs and browser plug-ins.
+   You can download the coordinates of the native conformation of 1COA
+   at the "Download Files" option in the left frame. Download the structure file in PDB
+   format. Please get familiar with the <link url="http://deposit.rcsb.org/format-faq-v1.html"> 
+   PDB file format </link>. For the purpose of this assignment, only
+   the lines starting with the "ATOM" header are meaningful to us. Note
+   that the x, y, z cartesian coordinates of each atom are stored in
+   columns 7, 8, and 9. These coordinates specify the location of each
+   atom of 1COA in 3D space. You will use such information in the future
+   to visualize protein conformations.
+  </para>
+
+  </section>
+
+  <section id="VMD">
+  <title> Visualizing Protein Conformations </title>
+
+  <para id="element-244">For this section, you will need access to the VMD molecular visualization package. At the end of this assignment there are short instructions on installing VMD.</para><para id="element-740">If you want to install VMD on a computer yourself, you can download a copy from its developers' <link url="http://www.ks.uiuc.edu/Development/Download/download.cgi?PackageName=VMD">website</link>.
+We recommend using the latest version.  Installation varies with your platform.  Windows versions are distributed as self-installing archives, and should work "out of the box."  The MacOS-X version is distributed as a disk image that you simply unpack and move to the location of your choice.  Linux and Unix versions will require you to compile the source code, but in most cases, this consists of switching into the correct directory and typing a couple of commands.  For specific instructions on how to install the version for your machine, see the README file distributed with the installation archive, which includes a "Quick Installation Instructions" section.</para><para id="VMDIntro">Your next task is to visualize the conformation specified in the PDB file for 1COA through VMD.  VMD is a flexible visualizer that allows you to display, manipulation, animate, and analyze biomolecules in full-color, three-dimensional renditions.  It also provides a built-in <link url="http://www.tcl.tk/">Tcl/Tk</link> interpreter, allowing you to customize its behavior and add functionality.
+
+<!--First you will need to install the MDL Chime plugin for your browser.  Instructions on how to do so are available at <link src="http://www.umass.edu/microbio/chime/getchime.htm">http://www.umass.edu/microbio/chime/getchime.htm</link>.  Protein Explorer is a browser-integrated molecular visualization program that
+   allows you to display, manipulate, and analyze biomolecules in three dimensions.  Once you have installed Chime,  restart your web browser and then browse to <link src="http://www.umass.edu/microbio/chime/pe/protexpl/frntdoor.htm">http://www.umass.edu/microbio/chime/pe/protexpl/frntdoor.htm</link>.  If you prefer to work offline, there is a downloadable version of Protein Explorer at <link src="http://www.umass.edu/microbio/chime/regisfrm/">http://www.umass.edu/microbio/chime/regisfrm/</link>.--></para>
+
+  <para id="element-475">Familiarize yourself with the capabilities of VMD through its <link url="http://www.ks.uiuc.edu/Research/vmd/current/docs.html#tutorials">documentation</link>, especially the User's Guide and various tutorials.
+
+<!--The authors of Protein Explorer have created an approximately one-hour tour of its capabilities, which is available at <link src="http://www.umass.edu/microbio/chime/pe/protexpl/qtour.htm">http://www.umass.edu/microbio/chime/pe/protexpl/qtour.htm</link>.  It is recommended that you complete this tour to get a feel for what you can do with Protein Explorer.--></para><para id="element-484">Start by visualizing the native conformation of the protein in 1COA.pdb.  You can do so by selecting the "File/New Molecule" option in the "VMD Main" window.  This will pop up the "Molecule File Browser" window.  Browse through your files to find the file you downloaded from the PDB website and click "Open."  Make sure the "Determine File Type" pulldown menu is set to "PDB," then click "Load."</para><para id="VMDGetFamiliar"><!--Visualize the native conformation specified in 1COA.pdb by loading it in Protein Explorer. You can do so by clicking on the "PE Site Map" link in the upper left frame, and then selecting "New Molecule."  This will bring up the "Load Molecule" frame.  You can now load the molecule by either typing the PDB ID into the appropriate box or by loading the PDB file you downloaded in the previous section.  You can use the PDB ID option to load any file directly from the PDB.  Of course, if you make a PDB format structure file yourself, as you will in later assignments, you will have to load it from the local filesystem.--></para>
+
+  <para id="element-139">You will note that the default graphical rendering represents bonds between atoms as lines.  You can change the grpahical representation of the molecule loaded through the "Graphics-&gt;Representation" menu option in the "VMD Main" window.  Note that, by default, VMD selects all atoms for drawing.  Please get familiar with the "Draw Style" options by experimenting with the "Coloring Method" and "Drawing Method" pulldown menus.  One useful drawing method is the cartoon representation, which draws α-helices as cylinders and β-sheets as flattened arrows.  You can further exmphasize these secondary structure elements by choosing the "Structure" option under "Coloring Methods."  You should be able to see something like Figure 1 below.  You can save your rendering as an image through the "File-&gt;Render" option.
+
+<!--By default, Protein Explorer displays proteins as a backbone trace, and displays water molecules as red spheres.  The backbone trace renders the protein as a tube that connects the &#945; carbons of adjacent amino acid residues.  No other atoms are used in this rendering method.  Also by default, Protein Explorer will be rotating the molecule continuously.  This may become annoying when you're trying to get a particular view of the protein.  When this happens, click on the "Toggle Spinning" button in the "First View" frame, or the "Spin" button in the "Quick Views" frame to stop the rotation. --></para><para id="CI2NativeVisualize"><!--You can change the graphical representation of
+   the molecule loaded by selecting "Quick Views" from the upper left frame (note that you may need to scroll down to see this option).  You can also reach "Quick Views" through the PE Site Map.  Once in Quick Views, note that by default Protein Explorer has all atoms selected (you can see this in the text box below the viewing window on the right).  This means that by default, any changes you make to how the molecule is rendered through the "DISPLAY" and "COLOR" pulldowns will affect all atoms unless you select a different set of atoms via the "SELECT" option.  Please get familiar with the "DISPLAY" and "COLOR" options by changing them and observing how the molecule is rendered. One particularly useful drawing method is the cartoon representation, which draws alpha helices as spiral-shaped flattened tubes, and strands involved in beta sheets as flattened arrows. You can color the secondary structure elements
+   of the loaded conformation by choosing the "Structure" option from the
+   coloring methods. You should be able to see something similar to the
+   Figure 1 below. 
+   You can save your rendering to an image file through
+   the "File/Render" option.-->
+
+    <figure id="chymotrypsin_native"><media id="id3124938" alt=""><image src="../../media/1coa.png" mime-type="image/png" height="350" width="350"/></media>
+    <caption> Native conformation of 1COA, "Cartoon" drawing, "Structure" coloring. </caption>
+    </figure>
+
+  </para>
+
+  <section id="visualizingSet">
+  <title> A. Visualizing a Set of Conformations</title>
+
+  <para id="CI2CRDs">Now it's time to look at more than one conformation. VMD supports
+   reading of cartesian coordinates in multiple formats. We will use 
+   <link url="http://www.ks.uiuc.edu/Research/vmd/vmd-1.8.3/ug/node21.html"> crd </link>
+   files from now on. A crd file contains one dummy line followed by 
+   a list of conformations, where each conformation is specified as a
+   list of 3N coordinates for a protein of N atoms. There are other
+   formats in which to store conformations, e.g. 
+   <link url="http://www.ks.uiuc.edu/Research/vmd/vmd-1.8.3/ug/node21.html"> 
+   dcd </link> files. Though they
+   occupy less space because they store conformations in binary format,
+   it is easier for you at this point to use crd files which store
+   conformations in ASCII. VMD allows you to do i/o, i.e. you can read a
+   crd file through VMD or write out the coordinates of a conformation to
+   a crd file. Try VMD's output capabilities by writing out the native
+   conformation specified in the pdb file for 1COA that you have already
+   loaded at this point. Click with the mouse at the line that specifies
+   the molecule you have loaded - this action will highlight it in
+   yellow. Then follow the "File-&gt;Save Coordinates" option. At the new
+   popped-up window, select the molecule for which you want to write out
+   the coordinates (this should be 1COA), choose the crd file format,
+   choose 0:0 for the beginning and end of the frames to be written out,
+   and save the coordinates to a new crd file, e.g. "1COA_native.crd."
+  
+<!--   Now it's time to look at more than one conformation. Protein Explorer supports
+   reading of multiple structures of a molecule in a slightly modified .pdb format that is 
+often used to report long lists of alternative structures obtained by NMR experiments.  The format is the same as standard .pdb, except that multiple structures are listed, each one preceded by a line with the keyword MODEL and a unique numerical designation for the structure, and ending with the keyword ENDMDL.
+
+
+There are other
+   formats in which to store conformations, e.g. 
+   <link src="http://www.ks.uiuc.edu/Research/vmd/vmd-1.8.3/ug/node21.html"> 
+   dcd </link> files.  DCD format files
+   occupy much less space because they store conformations in binary format, and without all the extraneous PDB information, but right now, Protein Explorer will only read animations in the bulky NMR ensemble .pdb format. --></para>
+
+  <para id="CI2TrajVisualize">In this assignment, you will be required to analyze conformations of
+   1COA. Since the file provided by the Protein Databank does not 
+   contain all atoms (hydrogen atoms are usually not reported in crystallographically-determined structures), we will be using a 
+   more complete version of the native conformation with the hydrogen atoms reconstructed: 1COA_native.pdb, included in the .zip archive linked at the top fo the page. Make sure 
+   to use this .pdb file from now on.
+
+</para><para id="element-967">Clean up your VMD window by deleting or hiding the loaded molecule.  To delete it, right click the molecule name in the "VMD Main" window and select "Delete Molecule."
+
+Now load the all-atom .pdb we provided.  Right click the molecule name in the VMD window and select "Delete Frames."  Click "Delete" in the window that pops up.  
+Load the prepared .crd file 1coa_confs.crd, which is included in the .zip archive linked at the top of this webpage, by selecting "File-&gt;Load Data into Molecule."  The
+   native conformation for 1COA is the first conformation specified in 
+   "1coa_confs.crd" 
+
+As the .crd file is loading, you will see VMD render each conformation in series.
+You can visualize this series of conformations as an animation, which is the default behavior of VMD, but in this case, it makes more sense to view the conformations superimposed over each other.  You can superimpose conformations from the .crd file
+   by using the "Graphical Representations" menu's "Trajectory" tab, where you can tell VMD
+   to draw multiple frames in the format a:b, where a is the number of the first frame you want to superimpose, and b is the number of the last frame (numbering starts at 0).  You should be able to see something similar
+   to Figure 2.  <emphasis>Warning:  If the machine you are working on is relatively old or slow, do not attempt to display more than 50-100 structures simultaneously.  More than that could cause VMD to become unresponsive.</emphasis>
+
+  <figure id="many_frames"><media id="id5518413" alt=""><image src="../../media/1coa_frames.png" mime-type="image/png" height="400" width="400"/></media>
+    <caption> 1COA conformations superimposed </caption>
+    </figure></para>
+
+  </section>
+
+  <section id="VisuazilingMD">
+  <title> B. Molecules in Motion </title>
+
+  <para id="HIVMDVisualize">Molecular Dynamics simulations model the motion of a molecular system using a force field based on the chemical properties of the atoms involved, and updates its state at each moment in time using Newton's Laws of Motion  (classical mechanics).   You will now visualize the conformations visited by HIV-1 protease during
+   a short MD simulation.  The corresponding native structure is available in
+ hiv_native.pdb, in the .zip archive for this assignment. 
+   Load the native structure .pdb and then the trajectory (.crd) file hiv_md_simulation.crd in <link document="m11615" resource="assignment.zip">assignment1.zip</link> (unzip it first), in the same way that you loaded 1coa_confs.crd in the previous section, to visualize the conformations produced by the MD simulation. Once the full series of structures is loaded, you can view them as an animation by selecting the "Loop" or "Rock" option in the leftmost pulldown menu at the bottom of the "VMD Main" window and then clicking the forward or reverse buttons (bottom right or bottom left corner of the "VMD Main" window). You should use the "bonds", "lines" or "licorice" representation for this file.
+   This animation should give you a
+   feeling for the flexibility of HIV protease.</para>
+
+  </section>
+  
+  <para id="SaveWork">Note that you can always save your work session in a state .vmd file. 
+   This can be very convenient if you do not want to repeat all the graphical
+   representations you have already chosen for 1COA. Please visit the manual 
+   for details on how to save and resume a session.
+</para> 
+
+  </section>
+
+  <section id="RankingConformations">
+  <title> Ranking Conformations</title>
+ 
+  <para id="GeometryRank">The conformations you superimposed on one another look different
+   from the native conformation. We will look at one possible way to quantify the difference or
+   similarity between two conformations: LRMSD (Least Root Mean Squared Deviation).  This is a measure of the average of the distance each atom would have to move to convert one structure to the other.
+   In this assignment you will use a standard script that computes the LRMSD between 
+   the conformations already loaded in a trajectory in VMD from a reference conformation.
+   Please download the <link resource="RMSD.tcl"> 
+    Tcl script </link> to compute the RMSD of conformations from a reference conformation. You may want to modify the script to print to a file of your choice. You can do this by modifying the line that opens the file (<code>set fp [open "rmsd_output.txt" w]</code>). If you prefer to print to the screen, you can increase the buffer size of the Tk console in VMD typing <code>tkcon buffer xxxx</code> inside the console itself, where <code>xxx</code> is the number of lines to store. As an alternative, you may use the Matlab script rmsd.m included with the files for the assignment.  Note that this script requires the other three .m files to be in the same directory, and that it assumes that the first line of all .crd files is a comment that can be discarded.
+     Please answer <link target-id="deliverables"> Q4 </link>. </para>
+
+  </section>
+
+  <section id="eip-953"><title>Visualizing Protein Substructures</title><para id="eip-254">In this section, you will investigate the evolutionary conservation of protein substructures such as enzymatic catalytic sites.  You will use publicly available online databases in addition to VMD to analyze the structures of two peroxidase enzymes and understand different methods of classifying related protein structures.</para><section id="eip-884"><title>Structurally Classifying Proteins</title><para id="eip-206">There are many classification systems for grouping similar protein structures within the PDB.  The Enzyme Commission (EC) nomenclature classifies enzyme structures by their catalytic function into 4 increasingly specific levels.  The heme-dependent peroxidases that you will investigate are a family of enzymes found in plants, fungi, and animals and the 4-part hierarchical EC number of the family is 1.11.1.7.</para><para id="eip-344"><title>Understanding EC classification</title>Start by visiting the PDB and searching for "1.11.1.7".  Your search will reveal many structure entries in the PDB that belong to the EC family of heme-dependent peroxidases, such as myeloperoxidases and lactoperoxidases found in higher animals.  Click on the "EC" icon (a small, white circular icon near the EC number for each entry) for one of the entries in the search results; this will take you to a description of EC 1.11.1.7.  The EC number page provides information on principal references for the family, alternative names for enzymes in the family, and links to additional enzymatic databases such as BRENDA and KEGG.  At the bottom of the page, you will see links to higher-level EC classifications such as "EC 1.11.1", "EC 1.11", and "EC 1".  Visit each of the pages to understand the more general functional classes to which EC 1.11.1.7 belongs.  For example, EC 1.11.1 contains many different families of peroxidases including and in addition to EC 1.11.1.7.  <link target-id="deliverables"> Q5 </link>: name 2 other peroxidase families from EC "1.11.1".  </para><para id="eip-762">Visit the page for EC 1 (link at the bottom of the EC 1.11.1.7 page).  EC 1 is the most general level of functional classification for the heme-dependent peroxidases.  There are 6 major EC classifications including EC 1 (EC 1,2,3,4,5, and 6) and the heme-dependent peroxidases belong to the top-level classification of Oxidoreductases.  
+</para><para id="eip-391"><title>Understanding CATH and SCOP classification</title>Return back to the PDB and search for entry 1CXP which will be a human myeloperoxidase belonging to EC 1.11.1.7.  The PDB entry page for 1CXP lists additional structural classification data about the enzyme at the bottom of the page.   Scroll down to the section titled "SCOP Classification".  The Structural Classification Of Proteins (SCOP) is another system for categorizing protein structures that, like the EC system, uses a four level hierarchic system.  The four SCOP levels correspond to structural class, fold, superfamily, and family.  The superfamily of 1CXP as defined by SCOP is listed as "myeloperoxidase-like".  Below the SCOP for 1CXP is the CATH structural classification information for the enzyme.  CATH stands for Class (C) Architecture (A) Topology (T) Homologous superfamily (H) and provides an additional classification scheme for the structure.  The class and architecture classification for 1CXP as defined by CATH are "mainly alpha" and "orthogonal bundle" respectively.  The CATH class describes the major secondary structure composition of the enzyme, and therefore "mainly alpha" indicates that 1CXP is composed primarily of alpha helices.</para><para id="eip-875"><title>Comparing structural classifications of fungal (1ARU) and human (1CXP) peroxidases</title>Now you will compare the structural classification of the human 1CXP to a fungal heme-dependent peroxidase in order to learn how to analyze the structural similarities and differences between the two similar functioning enzymes from two very different organisms.  Search the PDB for "1ARU", a peroxidase structure from Arthromyces ramosus, a fungal species.  
+
+<link target-id="deliverables"> Q6 </link>
+Which levels of the SCOP and CATH classifications do 1ARU and 1CXP have in common, and at what level of classification do they begin to differ?  You will see that while the two enzymes are functionally related, they have significant structural differences.  As a side note, the sequence similarity of the two enzymes is less than 10%, and 1CXP is composed of two chains, while 1ARU is composed of only a single amino acid chain.</para><para id="eip-758">Now you will visualize the two peroxidase enzymes to examine a common substructure shared between them within the catalytic site.  Download the PDB structure files for both 1ARU and 1CXP from the PDB.</para><para id="eip-927"><title>Draw the protein backbone in VMD</title>First open 1ARU.pdb in VMD.  There are many different ways of visualizing the protein.   Open the molecular representation menu of VMD by clicking "Graphics" and then selecting "Representations..." from the menu, which will open a new menu window.  Change the "Drawing Method" to "NewCartoon" to draw only the backbone of the protein and display all alpha helices in helix form.  Change the "Coloring Method" to "ResType", which will color each amino acid in the backbone by the residue type to which it corresponds: non-polar residues (white), basic residues (blue), acidic residues (red) and polar residues (green).</para><para id="eip-326"><title>Draw the catalytic substructure</title>Now you will highlight a substructure within the catalytic site of the 1ARU.  In the "Graphical Representations" window where you previously changed the drawing type of the whole protein, click the "Create Rep" button to create a new representation.  Select the new representation (the selected representation will be highlighted in yellow within the menu).  Now change the text in the "Selected Atoms" field from it's current value ("all") to "resid 52 56 93", which will select only residue numbers 52, 56, and 93 (you will not see any changes in the visualization window yet).  Now so that you can distinguish these amino acids from the rest of the protein, change the "Drawing Method" to "DynamicBonds" and the "Coloring Method" to "Name".  You will now see the side chains of these catalytic site amino acids within a pocket/cleft of the protein.  </para><para id="eip-373"><title>Draw the Heme group</title>There is also a heme group within this pocket near the catalytic amino acids that we will highlight now.  Create another molecular representation by clicking "Create Rep" again.  Select the new representation.  Change the "Selected Atoms" to "resname HEM" which will select the only heme group within the protein.  You will see that the heme group is co-located with the amino acids you have just highlighted.   Rotate the molecule and zoom in on the catalytic site that we have just revealed.  Output a picture of the catalytic site for your submission by going to "File -&gt; Render..." and then selecting "PostScript" from the "Render using" menu.  One free utility for viewing PostScript files is GhostView.  </para><para id="eip-749"><title>Compare fungal (1ARU) and human (1CXP) proteins</title>Now you will repeat the process for 1CXP, except that the amino acids for the catalytic site should be selected with "resid 91 95 239".  Again output a picture of the catalytic site, this time for 1CXP. <link target-id="deliverables"> Q7 </link> Examine the structures of 1CXP and 1ARU in VMD and list 3 differences between the enzymes that you see.</para></section></section><section id="id10227896">
+  <title> For Submission </title>
+  <para id="submission">
+  Please follow this list closely.
+  
+  <list id="deliverables" list-type="labeled-item"><title>Deliverables </title><item><label> Q1 </label> 
+     Describe in one paragraph what the role of CI2 is and in what
+     reactions it is involved. You may use any source (including the PDB).
+  </item>
+  <item><label> Q2 </label> 
+     List some reasons for having more than 16
+     different structures for CI2.
+  </item>
+  <item><label> Q3 </label> 
+     List the experimental methods used for resolving 1CIQ, 1CIR, and 1COA, 
+     the organisms from which these structures were extracted, and the 
+     respective resolutions reported (some of this information may be inside the PDB file, but some may be found in the structure's page within the PDB). Please explain why reporting the 
+     resolution is essential to resolving the structure for a protein.
+  </item>
+  <item><label> Q4 </label> 
+     Compute the LRMSD of all the conformations provided in 1coa_confs.crd with 
+     respect to the very first conformation in the same file.
+     Plot their LRMSD on the Y-axis and the conformation ID on the X-axis. You 
+     can use Excel, Gnuplot, SM, Matlab, or any
+     other plotting software. Please submit this plot.
+  </item>
+  <item><label> Q5 </label> 
+Name two protein families, as defined by EC nomenclature, within the "1.11.1" classification.
+  </item>
+  <item><label> Q6 </label> 
+In terms of CATH and SCOP classifications, how are 1ARU and 1CXP similar and where do they differ?
+  </item>
+  <item><label> Q7 </label> 
+With VMD (or the visualization tool of your choice), create an image for each of the two corresponding catalytic substructures, one within 1ARU and one within 1CXP.  List 3 differences that you see between the structures 1ARU and 1CXP.
+  </item></list>
+
+  </para>
+  </section>
+
+  <section id="id14226376">
+  <para id="clarification">Note: While you are welcome to use any method (MS Word, LaTeX, etc.), <emphasis>please typeset 
+         your deliverables</emphasis>.  Although we have assumed you are using VMD in writing the assignment, you are free to use any visualization software for molecular 
+         structures or even write your own.  Only VMD will be supported by the TA, however.</para>
+  </section>
+
+  <section id="id9071056"><title>Appendix: Installing VMD</title>
+    <para id="appendix">VMD can be installed easily in Windows/Linux/Solaris by getting the latest version from <link url="http://www.ks.uiuc.edu/Research/vmd/">here</link>. Just click on the "Download VMD" link on the left and choose the right platform. The page will ask you to register if it's the first time, so simply choose a username and password and accept the usual "no-commercial-use" license agreement.</para><para id="element-67">If you want to use VMD in the Owlnet Windows machines, you will need to install it locally, so get the Windows VMD installer from the link above and execute it. It has an intuitive graphical installation process.</para><para id="element-990">If you use Linux/Solaris (either at home or an Owlnet machine) you can get the appropriate version and install it. The UNIX distributions usually are tarball files. After you download them, you can un-tar them with:
+
+<code id="id15893383" display="block">tar zxvf vmd-1.8.5.bin.PLATFORM.opengl.tar.gz</code>
+
+Which will create an installation directory. CD to this directory and follow the short instructions in the README file. </para>
+  </section>
+  </content>
+  
+</document>

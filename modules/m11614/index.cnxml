@@ -1,0 +1,285 @@
+<document xmlns="http://cnx.rice.edu/cnxml" xmlns:md="http://cnx.rice.edu/mdml">
+  <title>Structural Computational Biology: Introduction and Background</title>
+  <metadata><md:content-id>undefined</md:content-id><md:title/><md:uuid>a698fedc-7d80-4589-acac-4560a40b7970</md:uuid>
+</metadata>
+<content>
+
+   <section id="topics_section">
+   <para id="topics_para"><list id="topicsList"><title> Topics in this Module </title>
+   <item> <link target-id="protein_background"> Proteins and Their Significance to Biology and Medicine </link> </item>
+   <item> <link target-id="protein_structure"> Protein Structure</link> </item>
+   <item> <link target-id="structure_determination"> Experimental Methods for Protein Structure Determination </link> </item>
+   <item> <link target-id="structure_repositories"> Protein Structure Repositories </link> </item>
+   <item> <link target-id="visualizingProteinStructures"> Visualizing Protein Structures </link> </item></list></para>
+
+
+   </section>
+
+ <section id="protein_background">
+ <title> Proteins and Their Significance to Biology and Medicine </title>
+   <para id="protein_info">
+
+   Proteins are the molecular workhorses of all known biological systems.  Among other functions, they are the motors that cause muscle contraction, the catalysts that drive life-sustaining chemical processes, and the molecules that hold cells together to form tissues and organs.</para>
+ 
+   <para id="protein_functions">The following is a list of a few of the diverse biological processes mediated by proteins:
+   <list id="functions"><item> Proteins called enzymes catalyse vital reactions, such as those involved in metabolism, cellular reproduction, and gene expression. </item>
+   <item> Regulatory proteins control the location and timing of gene expression. </item>
+   <item> Cytokines, hormones, and other signalling proteins transmit information between cells. </item>
+   <item> Immune system proteins recognize and tag foreign material for attack and removal. </item>
+   <item> Structural proteins prevent cells from collapsing on themselves, as well as forming large structures such as hair, nails, and the protective, largely impermeable outer layer of skin. They also provide a framework along which molecules can be transported within cells.</item>
+   </list>
+   </para><para id="element-708">The estimate of the number of genes in the human genome has been changing dramatically since it was annotated (the latest gene count estimates can be found in this <link url="http://en.wikipedia.org/wiki/Human_genome">Wikipedia article on the human genome</link>). Each gene encodes one or more distinct proteins.  The total number of distinct proteins in the human body is larger than the number of genes due to <link url="http://en.wikipedia.org/wiki/Alternate_splicing">alternate splicing</link>. Of those, only a small fraction have been isolated and studied to the point that their purpose and mechanism of activity is well understood.  If the functions and relationships between every protein were fully understood, we would most likely have a much better understanding of how our bodies work and what goes wrong in diseases such as cancer, amyotrophic lateral sclerosis, Parkinson's, heart disease and many others.  As a result, protein science is a very active field.  As the field has progressed, computer-aided modeling and simulation of proteins have found their place among the methods available to researchers.</para>
+   </section>
+
+   <section id="protein_structure">
+   <title> Protein Structure </title>
+    <para id="intro1">An amino acid is a simple organic molecule consisting of a basic (hydrogen-accepting), amine group bound to an acidic (hydrogen-donating) carboxyl group via a single intermediate carbon atom:
+
+   <figure id="aminoacid_illustration_new"><title> An α-amino acid </title>
+   <media id="idp5977648" alt=""><image src="../../media/aminoacid.jpg" mime-type="image/jpeg" height="150" width="200"/></media>
+   <caption> A generic α-amino acid. The "R" group is variable, and is the only difference between the 20 common amino acids. This form is called a zwitterion, because it has both positive and negatively charged atoms.  The zwitterionic state results from the amine group (NH2) gaining a hydrogen atom from solution, and the acidic group (COO) losing one.</caption>
+   </figure>
+
+    During the translation of a gene into a protein, the protein is formed by the sequential joining of amino acids end-to-end to form a long chain-like molecule, or <term>polymer</term>.  A polymer of amino acids is often referred to as a <term>polypeptide</term>.  The genome is capable of coding for 20 different amino acids whose chemical properties depend on the composition of their <term>side chains</term> ("R" in the above figure).  Thus, to a first approximation, a protein is nothing more than a sequence of these amino acids (or, more properly, amino acid <term>residues</term>, because both the amine and acid groups lose their acid/base properties when they are part of a polypeptide).  This sequence is called the <term>primary structure</term> of the protein.
+
+<figure id="polypeptide_illustration"><title>A polypeptide</title>
+   <media id="idp2163840" alt=""><image src="../../media/peptide_chain.jpg" mime-type="image/jpeg"/></media>
+   <caption> A generic polypeptide chain.  The bonds shown in yellow, which connect separate amino acid residues, are called <term>peptide bonds</term>.</caption></figure>
+
+The <link url="http://en.wikipedia.org/wiki/Amino_acid">Wikipedia entry on amino acids</link> provides a more detailed background, including the structure, properties, abbreviations, and genetic codes for each of the 20 common amino acids.</para>   
+
+   <para id="element-359">The primary structure of a protein is easily obtainable from its corresponding gene sequence, as well as by experimental manipulation.  Unfortunately, the primary structure is only indirectly related to the protein's function.  In order to work properly, a protein must fold to form a specific three-dimensional shape, called its <term>native structure</term> or <term>native conformation</term>.  The three-dimensional structure of a protein is usually understood in a hierarchical manner.  <term>Secondary structure</term> refers to folding in a small part of the protein that forms a characteristic shape.  The most common secondary structure elements are <term>α-helices</term> and <term>β-sheets</term>, one or both of which are present in almost all natural proteins. 
+
+   <figure id="alpha_helices"><title> Secondary Structure: α-helix </title>
+   <media id="idp2347248" alt=""><image src="../../media/alpha_helices.JPG" mime-type="image/jpeg" height="200"/></media>
+   <caption> α-helices, rendered three different ways.  Left is a typical cartoon rendering, in which the helix is depicted as a cylinder.  Center shows a trace of the backbone of the protein.  Right shows a space-filling model of the helix, and is the only rendering that shows all atoms (including those on side chains).</caption>
+   </figure>
+
+
+<figure orient="horizontal" id="beta_sheets"><title>Secondary Structure: β-sheet</title>
+<subfigure id="beta_sheet_cartoon">
+   <title> Cartoon representation </title>
+   <media id="idp6200832" alt=""><image src="../../media/beta_sheet_cartoon.JPG" mime-type="image/jpeg" height="200"/></media>
+   <caption> Different parts of the polypeptide strand align with each other to form a β-sheet. This β-sheet is <term>anti-parallel</term>, because adjacent segments of the protein run in opposite directions.</caption>
+   </subfigure>
+   <subfigure id="beta_sheet_ribbon">
+   <title> Ribbon representation </title>
+   <media id="idp3458064" alt=""><image src="../../media/beta_sheet_ribbon.JPG" mime-type="image/jpeg" height="200"/></media>
+   <caption> β-sheets are sometimes referred to as β pleated sheets, because of the regular zig-zag of the strands evident in this representation. </caption>
+   </subfigure>
+   <subfigure id="beta_sheet_bond">
+   <title> Bond representation </title>
+   <media id="idm80448" alt=""><image src="../../media/beta_sheet_bond.JPG" mime-type="image/jpeg" height="200"/></media>
+   <caption> Each segment in this representation represents a bond. Unlike the other two representations, side chains are illustrated.  Note the alignment of oxygen atoms (red) toward nitrogen atoms (blue) on adjacent strands.  This alignment is due to hydrogen bonding, the primary interaction involved in stabilizing secondary structure. </caption>
+   </subfigure>
+    <caption> Beta-sheets represented in three different rendering modes:  cartoon, ribbon, and bond representations.</caption></figure>
+
+<term>Tertiary structure</term> refers to structural elements formed by bringing more distant parts of a chain together into structural <term>domains</term>.  The spatial arrangement of these domains with respect to each other is also considered part of the tertiary structure.  Finally, many proteins consist of more than one polypeptide folded together, and the spatial relationship between these separate polypeptide chains is called the <term>quaternary structure</term>.  
+
+It is important to note that the native conformation of a protein is a direct consequence of its primary sequence and its chemical environment, which for most proteins is either aqueous solution with a biological pH (roughly neutral) or the oily interior of a cell membrane.  Nevertheless, no reliable computational method exists to predict the native structure from the amino acid sequence, and this is a topic of ongoing research.  Thus, in order to find the native structure of a protein, experimental techniques are deployed.  The most common approaches are outlined in the next section.</para></section>
+
+ <section id="structure_determination">
+   <title>Experimental Methods for Protein Structure Determination</title>
+   <para id="element-681">A <term>structure</term> of a protein is a three-dimensional arrangement of the atoms such that the integrity of the molecule (its connectivity) is maintained.  The goal of a protein structure determination experiment is to find a set of three-dimensional (x, y, z) coordinates for each atom of the molecule in some natural state.  Of particular interest is the native structure, that is, the structure assumed by the protein under its biological conditions, as well as structures assumed by the protein when in the process of interacting with other molecules.  Brief sketches of the major structure determination methods follow:</para><section id="Xray_Crystallography">
+   <title> X-ray Crystallography </title>
+   <para id="crystallography">The most commonly used and usually highest-resolution method of structure determination is 
+<term>x-ray crystallography</term>.   To obtain structures by this method, laboratory biochemists obtain a very pure, crystalline sample of a protein.  X-rays are then passed through the sample, in which they are diffracted by the electrons of each atom of the protein.  The diffraction pattern is recorded, and can be used to reconstruct the three-dimensional pattern of electron density, and therefore, within some error, the location of each atom.  A high-resolution <term>crystal structure</term> has a resolution on the order of 1 to 2 <term>Angstroms</term> (Å).  One Angstrom is the diameter of a hydrogen atom (10^-10 meter, or one hundred-millionth of a centimeter).</para>
+     <para id="crystallography_2">Unlike other structure determination methods, with x-ray crystallography, there is no fundamental limit on the size of the
+molecule or complex to be studied.  However, in order for the method to work, a pure, crystalline sample of the protein must be obtained.  For many proteins, including many membrane-bound receptors, this is not possible.  In addition,
+a single x-ray diffraction experiment provides only static information - that is, it provides only information about the native structure of the protein under the particular experimental conditions used.  As we will see later, proteins are often flexible, dynamic objects when in their natural state in solution, so a single structure, while useful, may not tell the full story.  More information on X-ray Crystallography is available at <link url="http://ruppweb.dyndns.org/Xray/101index.html">Crystallography
+101</link> and in the <link url="http://en.wikipedia.org/wiki/X-ray_diffraction">Wikipedia</link>.</para>
+   </section>
+
+   <section id="NMR">
+   <title> NMR </title>
+   <para id="nmr_intro"><term> Nuclear Magnetic Resonance (NMR)</term> spectroscopy has recently come into its own as a protein structure determination method. In an NMR experiment, a very strong magnetic field is transiently applied to a sample of the protein being studied, forcing any magnetic atomic nuclei into alignment.  The signal given off by a nucleus as it returns to an unaligned state is characteristic of its chemical environment.  Information about the atoms within two chemical bonds of the resonating nucleus can be deduced, and, more importantly, information about which atoms are spatially near each other can also be found.   The latter information leads to a large system of distance constraints between the atoms of the protein, which can then be solved to find a three-dimensional structure.  Resolution of NMR structures is variable and depends strongly on the flexibility of the protein.  Because NMR is performed on proteins in solution, they are free to undergo spatial rearrangements, so for flexible parts of the protein, there may be many more than one detectable structures.  In fact, NMR structures are generally reported as <term>ensembles</term> of 20-50 distinct structures.  This makes NMR the only structure determination technique suited to elucidating the behavior of <term>intrinsically unstructured proteins</term>, that is, proteins that lack a well-defined tertiary structure.  The reported ensemble may also provide insight into the dynamics of the protein, that is, the ways in which it tends to move.
+
+</para><para id="element-224">NMR structure determination is generally limited to proteins smaller than 25-30 kilodaltons (kDa), because the signals from different atoms start to overlap and become difficult to resolve in that range.   Additionally, the proteins must be soluble in concentrations of 0.2-0.5 mM without aggregation or precipitation.
+For more information on how NMR is used to find molecular structures,
+please see <link url="http://www.cis.rit.edu/htbooks/nmr/inside.htm">NMR Basics</link> and <link url="http://publications.nigms.nih.gov/structlife/chapter3.html">The World of NMR: Magnets, Radio Waves, and Detective Work</link> at the National Institutes of Health's <link url="http://publications.nigms.nih.gov/structlife/">The Structures of Life</link> website.</para>
+    
+</section>
+
+   <section id="Electron_Diffraction">
+   <title> Electron Diffraction </title>
+   <para id="ed_info"><term> Electron diffraction </term> works under the same principle as x-ray crystallography, but instead of x-rays, electrons are used to probe the structure.  Because of difficulties in obtaining and interpreting electron diffraction data, it is rarely used for protein structure determination.  Nevertheless, ED structures do exist in the PDB.  For more on ED, see this <link url="http://en.wikipedia.org/wiki/Electron_diffraction"> Wikipedia article</link>.</para>
+
+</section>
+
+   <section id="Large_complexes">
+   <title> Structure Prediction of Large Complexes </title>
+   <para id="lc_info">Large macromolecular complexes and molecular machines present a particular challenge in structure determination.  Generally too large to be crystallized, and too complex to solve by NMR, determining the structure of these objects usually requires the combination of high-resolution microscopy combined with computational refinement and analysis.  The main techniques used are <link url="http://en.wikipedia.org/wiki/Cryoelectron_microscopy">cryo-electron microscopy (Cryo-EM)</link> and standard light microscopy. </para>
+
+</section>
+
+</section>
+
+<section id="structure_repositories">
+<title> Protein Structure Repositories </title>
+<para id="pdb_info">Most of the protein structures discovered to date can be
+found in a large protein repository called the <link url="http://www.rcsb.org/pdb/">RCSB Protein DataBank (PDB)</link>.  The <term>Protein
+Data Bank (PDB)</term> is a public domain repository that contains
+experimentally determined structures of three-dimensional
+proteins. The majority of the proteins in the PDB have been determined by
+x-ray crystallography, but the number of proteins determined using NMR
+methods has been increasing as efficient computational techniques to derive structures from NMR data have been developed.  A few electron diffraction structures are also available.  The PDB was originally established at
+Brookhaven National Laboratory in October, 1971, with 7
+structures.  Currently, the database is maintained by Rutgers
+University, the State University of New Jersey, the San Diego
+Supercomputer Center at the University of California, San Diego, and
+the National Institute of Standards and Technology. The current number of proteins (and/or nucleic acids) in the PDB database is displayed at the top-right corner of the main PDB page. The imaging method statistics of these structures (i.e., which methods were used for what fraction of the structures), as well as other classifications, can be found <link url="http://www.rcsb.org/pdb/static.do?p=general_information/pdb_statistics/index.html">here</link>. The European Bioinformatics Institute
+Macromolecular Structure Database group (UK) and the Institute for
+Protein Research at Osaka University (Japan) are international
+contributors to the contents of the PDB.
+
+ <!--The RCSB website also provides a set of links to <link src="http://www.rcsb.org/pdb/links.html#Databases"> other structural databases</link>.--></para>
+ </section>
+ 
+ <section id="visualizingProteinStructures">
+ <title> Visualizing Protein Structures </title>
+  <para id="vmd_link">
+   Numerous tools are available for visualizing the structures stored in the PDB and other repositories.  Most such tools allow a detailed examination of the molecule in a variety of rendering modes.  For example, sometimes it may be useful to have a detailed image of the surface of the molecule as experienced by a molecule of water.  For other purposes, a simple, cartoonish representation of the major structural features may be sufficient.</para>
+
+<para id="element-0"><title> A Few Molecular Visualization Programs</title>
+<list id="visualizer_list"><item><link url="http://www.ks.uiuc.edu/Research/vmd/">Visual Molecular Dynamics (VMD)</link> was originally developed for viewing molecular simulation trajectories.  It is a very powerful, full-featured, and customizable molecular viewing package.  Customization is available using Tcl/Tk scripting.  Information on Tcl/Tk scripting can be found at this <link url="http://www.tcl.tk/"> Tcl/Tk </link> website.</item>
+
+<item><link url="http://pymol.sourceforge.net/">PyMol</link> is an open-source molecular viewer that can be used to generate professional-looking images.  PyMol is highly customizable through the Python scripting language.</item>
+
+<item><link url="http://www.umass.edu/microbio/chime/pe/protexpl/frntdoor.htm">Protein Explorer</link> is an easy-to-use, web browser-based visualization tool.  Protein explorer is built using the <link url="http://www.umass.edu/microbio/chime/whatis_c.htm">MDL Chime</link> browser plugin, which in turn is based on the <link url="http://www.umass.edu/microbio/rasmol/">RasMol</link> viewer.  Because Chime only works under Windows and Macintosh OS, the use of Protein Explorer is restricted to those platforms.</item>
+
+<item><link url="http://jmol.sourceforge.net/">JMol</link> is a Java-based molecular viewer.  In applet form, it can be downloaded on-the-fly to view structures from the web.  A stand-alone version also exists, which can be used independently of a web browser.</item>
+
+<item><link url="http://www.cgl.ucsf.edu/chimera/">Chimera</link> is a powerful visualizer and analysis tool that can be comfortably used with very large molecular complexes. It can also produce very high-quality images for use in presentations and publications.</item></list></para>
+
+
+<section id="VMD_tutorial">
+<title>Visualizing HLA-AW with VMD</title>
+
+
+<para id="vmd_tutorial_1">What follows will be a very brief introduction to what can be done with VMD.  Only the most basic viewing functionality will be discussed.  For a complete description of the capabilities of VMD and how to use them, please refer to the <link url="http://www.ks.uiuc.edu/Research/vmd/">VMD web site</link>.
+</para>
+
+<para id="element-59">In this section, a human leukocyte-associated antigen, HLA-AW (PDB structure ID 2HLA), will be shown under various rendering methods in VMD.  This section is intended to convey, first, a general idea of the types of visual representations that are available for protein structures, and second, what information is and is not conveyed by each representation.</para><para id="vmd_tutorial_2">VMD allows the user to load and view molecule description files in a wide variety of common formats, including trajectory files with multiple structures of the same molecule, such as might be generated by a simulation.  Once the molecules are loaded, the way each molecule is rendered may be controlled using the Graphical Representations menu:
+
+<figure orient="horizontal" id="vmd_figure_4"><subfigure id="vmd_graphical_reps">
+   <title>VMD Graphical Representations menu </title>
+   <media id="idm8515808" alt=""><image src="../../media/vmd_graphical_reps_interface.JPG" mime-type="image/jpeg" width="300"/></media>
+   <caption> This menu allows the user to control in detail how each molecule is rendered. </caption>
+   </subfigure>
+   <subfigure id="vmd_color_methods">
+   <title>VMD atom coloring methods </title>
+   <media id="idm6490912" alt=""><image src="../../media/vmd_color_methods.JPG" mime-type="image/jpeg"/></media>
+   <caption> Coloring schemes to highlight features of interest. </caption>
+   </subfigure>
+   <subfigure id="protein_reps">
+   <title>VMD molecule drawing methods </title>
+   <media id="idm6720064" alt=""><image src="../../media/vmd_representations.JPG" mime-type="image/jpeg"/></media>
+   <caption> Rendering methods in VMD.  Which one to use depends on the features to highlight. </caption>
+   </subfigure>
+    <caption> The built-in rendering options of VMD. </caption></figure></para><para id="element-68">Molecules may be displayed by various rendering modes: 
+
+   <figure id="HLA_lines"><title> HLA-AW.  Drawing method: LINES.  Coloring method: NAME </title>
+   <media id="idm6769696" alt=""><image src="../../media/VMD_MHC_1_lines-type.JPG" mime-type="image/jpeg" height="400"/></media>
+   <caption> In this representation, each line represents a bond between two atoms.  The color of each half-bond corresponds to the element of the atom at the corresponding end of the bond (red for oxygen, blue for nitrogen, yellow for sulfur, and teal for carbon).  Line representation gives a clear idea of the molecule's connectivity, but for large molecules it can be difficult to isolate protein sub-structures.</caption>
+   </figure>
+
+   <figure id="HLA_VDW_name"><title> HLA-AW.  Drawing method: VDW.  Coloring method: NAME </title>
+   <media id="idm6959984" alt=""><image src="../../media/VMD_MHC_1_VDW-type.JPG" mime-type="image/jpeg" height="400"/></media>
+   <caption> Here each atom is represented by a sphere whose radius is the <term>Van der Waals radius</term> of the atom.  The Van der Waals radius is half the separation of unbonded atoms packed as tightly as possible, and provides a rough notion of a collision radius, although it is not a firm barrier.  This representation of the molecule gives a rough sense of its shape, and is sometimes called a <term>space-filling</term> model. </caption>
+   </figure>
+
+   <figure id="HLA_VDW_chain"><title> HLA-AW.  Drawing method: VDW.  Coloring method: CHAIN </title>
+   <media id="idp1847472" alt=""><image src="../../media/VMD_MHC_1_VDW-chain.JPG" mime-type="image/jpeg" height="500"/></media>
+   <caption> This rendering is the same as in the previous figure, except that now the atoms are colored based on which polypeptide chain they belong to.  HLA-AW consists of two chains, the alpha chain (blue), which folds into three domains and the smaller β2 microglobulin (red), which is a component of a whole class of HLA proteins.  Coloring by chain allows an inspection of how the polypeptide subunits come together to form the whole quaternary structure of the protein. The black balls are water molecules near the surface of the protein that always appear in the same place in crystal structures, and may therefore be considered part of the structure for some applications. </caption>
+   </figure>
+
+   <figure id="HLA_surf_chain"><title> HLA-AW.  Drawing method: SURF.  Coloring method: CHAIN </title>
+   <media id="idp5054320" alt=""><image src="../../media/VMD_MHC_1_surf-chain.JPG" mime-type="image/jpeg" height="500"/></media>
+   <caption> The Surf drawing mode renders a surface swept out by a sphere of some set size skimming the protein.  Usually, this size is approximately that of a water molecule, in which case the rendered surface is very similar to the <term>solvent-accessible surface</term>. 
+Note that it is impossible to deduce the connectivity of the atoms from this image or from the space filling image in the previous figure.  Overall shape, rather than connectivity, is the information conveyed by these representations.  Hence, both backbone-based and surface-based renderings are necessary to fully understand a protein's structure.
+</caption>
+   </figure>
+
+   <figure id="HLA_surf_chain_tilted"><title> HLA-AW.  Drawing method: SURF.  Coloring method: CHAIN </title>
+   <media id="idm6679104" alt=""><image src="../../media/VMD_MHC_1_surf-chain_tilted.JPG" mime-type="image/jpeg" height="500"/></media>
+   <caption> Here the protein has been rotated approximately 90 degrees toward the viewer, so that, compared to the previous image, we are looking down from above. The deep groove running from the top left to lower right is the <term>binding pocket</term> of the protein. </caption>
+   </figure>
+
+   <figure id="HLA_cartoon_chain_tilted"><title> HLA-AW.  Drawing method: CARTOON.  Coloring method: CHAIN </title>
+   <media id="idp6387696" alt=""><image src="../../media/VMD_MHC_1_cartoon-chain_tilted.JPG" mime-type="image/jpeg" height="500"/></media>
+   <caption> Cartoon rendering places an emphasis on secondary structure.  Beta sheets appear as flattened arrows, and alpha helices appear as cylinders.  These are common conventions in representing protein secondary structure.  By examining this image, we can see that the walls of the binding pocket observed in the previous figure consist of alpha helices, and the floor is an <term>anti-parallel</term> beta sheet.  In anti-parallel beta sheets, adjacent strands run in the opposite direction (notice the arrow points alternate in direction).  Note that this representation only conveys information about the backbone connectivity of the protein.  Side chain atoms are omitted, and therefore the overall shape is only a very coarse approximation.</caption>
+   </figure>
+
+   <figure id="HLA_surf_restype"><title> HLA-AW.  Drawing method: SURF.  Coloring method: RESTYPE</title>
+   <media id="idp673984" alt=""><image src="../../media/VMD_MHC_1_surf-restype.JPG" mime-type="image/jpeg" height="500"/></media>
+   <caption> Alternative coloring methods can provide additional insight into a protein's structure and function.  Here each atom is colored based on whether the side chain of the amino acid residue to which it belongs is acidic (red), basic (blue), polar neutral (green), or apolar (gray).  Note that residues on the surface of the protein tend to be hydrophilic (attracted to water, in red, blue, and green), whereas residues closer to the core of the protein tend to be hydrophobic (greasy or water repellant, in gray).  This is characteristic of proteins that exist in aqueous solution in nature.  Their native structure is stabilized by a tendency for the hydrophilic residues to interact with the solvent water molecules, while the hydrophobic residues are driven together away from the solvent.  Clusters of hydrophobic residues on the surface often indicate a location that is usually protected from solvent in the natural state, either by interaction with another molecule or by part of the protein itself.</caption>
+   </figure></para>
+</section>
+
+<section id="ProteinExplorerSection">
+<title>Visualizing HLA-AW with Protein Explorer</title>
+<para id="pe_tutorial_1">Protein Explorer is designed as a user-friendly but fairly full-featured visualizer.  It is not as scriptable or as powerful as some other visualizers such as VMD and PyMol, but it is one of the quickest and easiest to get started with.  It is used through a web browser, either by accessing it through the <link url="http://www.umass.edu/microbio/chime/pe/protexpl/frntdoor.htm">Protein Explorer website</link> (via the Quick-Start Protein Explorer link), or as an offline version, downloadable from <link url="http://www.umass.edu/microbio/chime/regisfrm/">this page</link>.  Both versions require the MDL Chime molecular viewing plugin, which you can download from <link url="http://www.mdl.com/downloads/downloadable/downloadable.jsp?product_name=MDL_PROD_CHIME_20030320124921">here</link> (registration required).
+</para><para id="element-481">As with VMD above, a human leukocyte-associated antigen, HLA-AW (PDB structure ID 2HLA), will be shown in various renditions.</para><para id="element-541">Upon opening, Protein Explorer will load a default molecule and display it (this feature may be disabled via a setting under "preferences" in the lower left frame):
+
+   <figure id="ProteinExplorerStartup"><title> Protein Explorer at Startup</title>
+   <media id="idp3239312" alt=""><image src="../../media/protein_explorer_interface.JPG" mime-type="image/jpeg" height="600"/></media>
+   <caption> The interface contains three areas.  The frame on the right contains the rendering window, where the molecule is displayed.  The lower left frame contains an input box for text commands and a text box that displays general text output from the program:  What commands have been executed, what the program is currently doing, etc.  The top left frame generally contains the user interface in the form of buttons and links.  Its exact contents vary with use.</caption>
+   </figure></para><para id="element-322">Clicking on the "PE Site Map" link pops up a window containing Protein Explorer's top-level menu:
+
+    <figure id="ProteinExplorerSiteMap"><title> Protein Explorer Site Map Window</title>
+   <media id="idp2619120" alt=""><image src="../../media/protein_explorer_site_map.JPG" mime-type="image/jpeg" width="200"/></media>
+   <caption> Each option contains a helpful tooltip which can be seen by hovering the mouse
+cursor over it.  "New Molecule" allows the user to load a molecule either directly from the PDB 
+or from the local filesystem.  "Reset Session" returns to the default view and rendering
+style, which can be a useful shortcut.  "Quick Views" opens up a menu from which the user can
+select how the molecule is rendered.</caption>
+   </figure></para><para id="element-121">Once a molecule is loaded, the "Quick Views" menu allows the user to control how it is displayed:
+
+    <figure id="ProteinExplorerQuickViews"><title> Protein Explorer QuickViews Interface</title>
+   <media id="idm754048" alt=""><image src="../../media/protein_explorer_quick_views.JPG" mime-type="image/jpeg"/></media> 
+   <caption>The "SELECT" pulldown menu allows the user to pick a group of atoms based on their
+properties, their location, the structural elements in which they are involved, or by directly clicking them.
+The "DISPLAY" pulldown menu then allows the user to determine the style in which the selected atoms are rendered.
+Most of the styles available through VMD are also available in Protein Explorer.  The "COLOR" pulldown menu 
+allows the user to determine how the atoms are colored.  Options include coloring by secondary structure elements,
+atom type, subunit (chain), a spectrum from end to end of the protein, and by properties such as 
+charge and polarity.</caption>
+   </figure></para><para id="element-89"><figure id="ProteinExplorer2HLABackbone"><title> Protein Explorer: HLA-AW Backbone Rendering</title>
+   <media id="idm7521488" alt=""><image src="../../media/protein_explorer_2HLA.JPG" mime-type="image/jpeg" width="400"/></media> 
+   <caption>This rendering mode shows the protein backbone (no side chains) through the alpha carbons of each amino acid residue.  It gives the user a sense of how the chains fold to form the structure, but not it's full shape, since all side chain atoms have been removed.  The yellow
+bars are disulfide bonds, which are covalent bonds that lock distant parts of the chain together to help maintain the structure.</caption>
+   </figure></para><para id="element-644"><figure id="ProteinExplorer2HLACartoon"><title> Protein Explorer: HLA-AW Cartoon Style</title>
+   <media id="idm7275808" alt=""><image src="../../media/protein_explorer_2HLA_cartoon.JPG" mime-type="image/jpeg" width="400"/></media> 
+   <caption>Cartoon rendering works as for VMD.  As in the backbone rendering above, side chains are ignored, and the protein backbone is rendered as a smoothly curving tube.  Beta sheets appear as flattened arrows, and alpha helices appear as spiraling ribbons.</caption>
+   </figure></para><para id="element-901"><figure id="ProteinExplorerAdvanced"><title> Protein Explorer Advanced Explorer Menu</title>
+   <media id="idp2409440" alt=""><image src="../../media/protein_explorer_advanced.JPG" mime-type="image/jpeg" width="300"/></media> 
+  <caption>More advanced rendering methods are available through the Advanced Explorer Menu.</caption>
+   </figure></para><para id="element-152"><figure id="ProteinExplorerSurfaceMenu"><title> Protein Explorer Surfaces Menu</title>
+   <media id="idp1769872" alt=""><image src="../../media/protein_explorer_surfaces.JPG" mime-type="image/jpeg" width="300"/></media> 
+   <caption>The Surfaces menu allows the user to display the surface of the protein.  Several variable are available,
+including the radius of the probe used to define the surface, as well as several methods of coloring the surface based on 
+chemical and physical properties.</caption>
+   </figure></para><para id="element-778"><figure id="ProteinExplorer2HLASurface"><title> Protein Explorer: HLA-AW Surface Rendering</title>
+   <media id="idp3641088" alt=""><image src="../../media/protein_explorer_2HLA_surface.JPG" mime-type="image/jpeg" width="400"/></media> 
+   <caption>This rendering style shows the surface of the protein accessible to water.  This image is tilted 90 degrees 
+toward the viewer from the previous images.  </caption>
+   </figure></para><para id="element-469"><figure id="ProteinExplorer2HLASurfaceCartoon"><title> Protein Explorer: HLA-AW Superimposed Images</title>
+   <media id="idp351936" alt=""><image src="../../media/protein_explorer_2HLA_surface_cartoon.JPG" mime-type="image/jpeg" width="600"/></media> 
+   <caption>By setting the surface to be transparent, it is possible to superimpose another rendering style over it, and 
+see how it fits into the surface.  This can convey an idea of how the fold of the chain relates to the overall three-dimensional shape of the protein.</caption></figure></para>
+
+</section>
+</section><para id="element-292"><title>Recommended Reading and Resources:</title>
+<list id="RecommendedReading"><item>A detailed introduction to protein structure and function can be found in most introductory biochemistry textbooks.  For example, Lehninger Principles of Biochemistry, 4th Edition, by D. L. Nelson and M. Cox (sections 2.1, 3.1-3.5, 4.1-4.4, 5.1-5.3).</item>
+<item><link url="http://publications.nigms.nih.gov/structlife/">The Structures of Life</link> at the NIH web site.  This site is an introduction to protein  structure, structure determination methods, drug design techniques, and other applications of structural biology.</item>
+
+<item><emphasis>Protein Structure and Function</emphasis>, by Gregory A. Petsko and Dagmar Ringe.  This book provides an overview of the basic biochemistry of structural biology.  Topics covered include protein structure, mechanisms of protein function, regulation of protein function, and case studies of the kinds of problems that arise in structural biology.</item>
+
+<item><link url="http://www.mit.edu:8001/afs/athena/course/other/esgbio/www/7001main.html">The MIT Biology Hypertextbook</link>.  This online textbook provides introductory level coverage of the field of microbiology.  It includes cell biology, protein biochemistry, genetics, metabolism, and molecular biology. New content is typically added over time.</item>
+
+<item><link url="http://www.biosino.org/mirror/www.aaai.org/Press/Books/Hunter/hunter-contents.html">Artificial Intelligence and Molecular Biology</link>.  This online book includes chapters on classifying protein structures, predicting protein structure, and analyzing crystallographic and NMR data to determine protein structure.  Of particular interest to readers of the current page who have a computer science background but need to understand more of the basic underlying biology is <link url="http://www.biosino.org/mirror/www.aaai.org/E-Books/Hunter/01-Hunter.pdf">Chapter 1: Molecular Biology for Computer Scientists</link>.</item></list> 
+</para>
+ 
+</content>
+  
+</document>
